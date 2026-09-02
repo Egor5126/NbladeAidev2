@@ -1,0 +1,46 @@
+@using Models.BaseModels
+@using Models.BaseModels.Weapon
+@using Models.Names
+@using Models.Stats
+
+<MudText Typo="Typo.h6" Style="@($"font-size: large;")">@Weapon.Name</MudText>
+<MudText Typo="Typo.subtitle2" Style="@($"color:{Colors.Grey.Darken1};font-style: italic;")">(@Weapon.SimpleName)</MudText>
+<br />
+
+<MudGrid>
+    <MudItem xs="6">
+        @if (Weapon.BaseStat != null)
+        {
+            <MudText Typo="Typo.body1">@Weapon.BaseStat</MudText>
+        }
+        @foreach (var stat in Weapon.StatCombination.Stats)
+        {
+            <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@stat</MudText>
+        }
+        @if (Weapon.StatCombination.StatCombinationType == StatCombinationType.ThreeStats)
+        {
+            <MudText Typo="Typo.body1" Style="@($"white-space: pre-wrap;")">@Environment.NewLine</MudText>
+        }
+    </MudItem>
+    <MudItem xs="6">
+        @for (var i = 0; i < Weapon.WeaponGems.Count; ++i)
+        {
+            var currentIndex = i;
+            var currentGem = Weapon.WeaponGems[currentIndex];
+            <MudText Typo="Typo.body1">Камень @(currentIndex + 1): (@GemNamesProvider.GetWeaponGemLevelName(currentGem.GemLevel))</MudText>
+            <MudText Typo="Typo.body1" Class="pb-1" Style="@($"color:{Colors.Green.Darken1};")">@GetGemStatDescription(currentGem)</MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public WeaponBase Weapon { get; set; }
+
+    private string GetGemStatDescription(WeaponGem weaponGem)
+    {
+        return weaponGem.GemLevel == GemLevel.None
+            ? "нет характеристики"
+            : StatNamesProvider.GetStatName(weaponGem.StatType);
+    }
+}

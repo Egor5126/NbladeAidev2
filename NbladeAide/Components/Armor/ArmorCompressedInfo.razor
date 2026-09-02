@@ -1,0 +1,41 @@
+@using Models.BaseModels
+@using Models.BaseModels.Armors
+@using Models.Names
+@using Models.Stats
+
+<MudText Typo="Typo.h6" Style="@($"font-size: large;")">@Armor.Name</MudText>
+<MudText Typo="Typo.subtitle2" Style="@($"color:{Colors.Grey.Darken1};font-style: italic;")">(@Armor.SimpleName)</MudText>
+<br />
+
+<MudGrid>
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1">@Armor.BaseArmorStat</MudText>
+        <MudText Typo="Typo.body1">@Armor.BaseMagicArmorStat</MudText>
+        @foreach (var stat in Armor.StatCombination.Stats)
+        {
+            <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@stat</MudText>
+        }
+        @if (Armor.StatCombination.StatCombinationType == StatCombinationType.ThreeStats)
+        {
+            <MudText Typo="Typo.body1" Style="@($"white-space: pre-wrap;")">@Environment.NewLine</MudText>
+        }
+    </MudItem>
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1">Камень (@GemNamesProvider.GetGemLevelName(Armor.Gem1.GemLevel))</MudText>
+        <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@GetGemStatDescription(Armor.Gem1)</MudText>
+        <MudText Typo="Typo.body1">Камень (@GemNamesProvider.GetGemLevelName(Armor.Gem2.GemLevel))</MudText>
+        <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@GetGemStatDescription(Armor.Gem2)</MudText>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public ArmorBase Armor { get; set; }
+
+    private string GetGemStatDescription(Gem gem)
+    {
+        return gem.GemLevel == GemLevel.None
+            ? "нет характеристики"
+            : gem.Stat.ToString();
+    }
+}

@@ -1,0 +1,31 @@
+@using Models.BaseModels.Armors
+
+@typeparam TArmor where TArmor : ArmorBase
+
+<MudDialog>
+    <TitleContent>
+        Изменение характеристик
+    </TitleContent>
+    <DialogContent>
+        <ArmorComponent @bind-Armor="Armor" TArmor="TArmor"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public TArmor Armor { get; set; }
+
+    private void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(Armor));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

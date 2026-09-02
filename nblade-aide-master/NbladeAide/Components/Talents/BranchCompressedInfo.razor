@@ -1,0 +1,21 @@
+@using Models.TalentsModels
+@using Models.Names
+
+<MudStack Justify="Justify.Center" >
+    <MudText Typo="Typo.button">@Branch.Name</MudText>
+    <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">Очки: @(Branch.InvestedPoints)</MudText>
+    @* Ветки талантов больше не дают бонусы к статам в процентах (изменения в игре) — отключено
+    <MudStack Spacing="0">
+        @foreach (var stat in Branch.StatTypesToIncrease)
+        {
+            <MudText Typo="Typo.body2">@StatNamesProvider.GetStatName(stat.StatType): +@stat.BaseMultiplier%</MudText>
+        }
+        <MudText Typo="Typo.subtitle2" Style="@($"color:{Colors.Grey.Darken1};font-style: italic;")">(за вложенное очко)</MudText>
+    </MudStack>
+    *@
+</MudStack>
+
+@code {
+    [Parameter]
+    public TalentBranch Branch { get; set; }
+}

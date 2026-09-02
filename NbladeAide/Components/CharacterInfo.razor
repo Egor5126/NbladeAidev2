@@ -1,0 +1,288 @@
+@using Models
+@using Models.BaseModels
+@using Models.BaseModels.Amplification
+@using Models.BaseModels.Jewelry
+@using Models.BaseModels.Weapon
+@using Models.Names
+@using Models.Sharing
+@using Models.Stats
+
+@inject CharacterManager CharacterManager
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudSelect
+    T="CharacterClass"
+    Value="@Character.CharacterClass"
+    ToStringFunc="@ClassNamesProvider.GetClassName"
+    Label="Выберите класс персонажа"
+    ValueChanged="ChangeCharacterClass"
+    AnchorOrigin="Origin.BottomCenter"
+    Variant="Variant.Outlined">
+
+    @foreach (var classType in Enum.GetValues(typeof(CharacterClass)).Cast<CharacterClass>())
+    {
+        <MudSelectItem Value="@classType"/>
+    }
+</MudSelect>
+
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Экипировка</MudText>
+<MudGrid Class="px-8 py-2">
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.Cuirass" TArmor="Cuirass" />
+    </MudItem>
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.Highway" TArmor="Highway"/>
+    </MudItem>
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.ShoulderPad" TArmor="ShoulderPad"/>
+    </MudItem>
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.Helmet" TArmor="Helmet"/>
+    </MudItem>
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.Shoes" TArmor="Shoes"/>
+    </MudItem>
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.Gloves" TArmor="Gloves"/>
+    </MudItem>
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.Bracers" TArmor="Bracers"/>
+    </MudItem>
+    <MudItem xs="4">
+        <ArmorCompressedEditable @bind-Armor="Character.Belt" TArmor="Belt"/>
+    </MudItem>
+</MudGrid>
+
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Оружие</MudText>
+<MudGrid Class="px-8 py-2">
+    <MudItem xs="4">
+        <MudSelect
+            T="WeaponType"
+            Label="Выберите тип основного оружия"
+            Value="@Character.MainWeapon.WeaponType"
+            ToStringFunc="@WeaponNamesProvider.GetWeaponNameByType"
+            ValueChanged="ChangeMainWeapon">
+
+            @foreach (var weaponType in Character.MainWeapon.GetAvailableWeaponTypes())
+            {
+                <MudSelectItem Value="@weaponType"/>
+            }
+        </MudSelect>
+        <br />
+        <WeaponCompressedEditable @bind-Weapon="Character.MainWeapon"/>
+    </MudItem>
+    @if (Character.SecondWeapon != null)
+    {
+        <MudItem xs="4">
+            <MudSelect
+                T="WeaponType"
+                Label="Выберите тип дополнительного оружия"
+                Value="@Character.SecondWeapon.WeaponType"
+                ToStringFunc="@WeaponNamesProvider.GetWeaponNameByType"
+                ValueChanged="@(newType => Character.SecondWeapon = Character.SecondWeapon.CreateFromWeaponType(newType))">
+
+                @foreach (var weaponType in Character.SecondWeapon.GetAvailableWeaponTypes())
+                {
+                    <MudSelectItem Value="@weaponType"/>
+                }
+            </MudSelect>
+            <br />
+            <WeaponCompressedEditable @bind-Weapon="Character.SecondWeapon"/>
+        </MudItem>
+    }
+</MudGrid>
+
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Бижутерия</MudText>
+<MudGrid Class="px-8 py-2">
+    <MudItem xs="4">
+        <JewelryCompressedEditable @bind-Jewelry="Character.Amulet1" TJewelry="Amulet" />
+    </MudItem>
+    <MudItem xs="4">
+        <JewelryCompressedEditable @bind-Jewelry="Character.Amulet2" TJewelry="Amulet" />
+    </MudItem>
+    <MudItem xs="4">
+        <JewelryCompressedEditable @bind-Jewelry="Character.Necklace" TJewelry="Necklace" />
+    </MudItem>
+    <MudItem xs="4">
+        <JewelryCompressedEditable @bind-Jewelry="Character.Ring1" TJewelry="Ring" />
+    </MudItem>
+    <MudItem xs="4">
+        <JewelryCompressedEditable @bind-Jewelry="Character.Ring2" TJewelry="Ring" />
+    </MudItem>
+</MudGrid>
+
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Плащ</MudText>
+<MudGrid Class="px-8 py-2">
+    <MudItem xs="4">
+        <CloakCompressedEditable @bind-Cloak="Character.Cloak" />
+    </MudItem>
+</MudGrid>
+
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Усиления</MudText>
+<MudStack>
+    <MudSelect
+        T="Elixir"
+        Label="Выберите атакующий эликсир"
+        @bind-Value="@Character.AttackElixir"
+        ToStringFunc="@(e => e.Name)"
+        Clearable>
+
+        @foreach (var elixir in ElixirProvider.AttackElixirs)
+        {
+            <MudSelectItem Value="@elixir"/>
+        }
+    </MudSelect>
+    <MudSelect
+        T="Elixir"
+        Label="Выберите защитный эликсир"
+        @bind-Value="@Character.DefenseElixir"
+        ToStringFunc="@(e => e.Name)"
+        Clearable>
+
+        @foreach (var elixir in ElixirProvider.DefenceElixirs)
+        {
+            <MudSelectItem Value="@elixir"/>
+        }
+    </MudSelect>
+    @foreach (var availableAmplification in Character.AvailableAmplifications)
+    {
+        <MudCheckBox @bind-Value="@availableAmplification.Used" Label="@availableAmplification.Name" Color="Color.Primary" Dense="true" Class="mt-3"></MudCheckBox>
+        <MudText Typo="Typo.subtitle2" Style="@($"color:{Colors.Grey.Darken1};font-style: italic;")" Class="ml-5">@availableAmplification.Description</MudText>
+    }
+</MudStack>
+
+
+<br />
+<MudButton @onclick="ShareBuildAsync" Variant="Variant.Filled" Color="Color.Primary">
+    Поделиться билдом
+</MudButton>
+
+
+<br />
+<MudStack Row="true" Spacing="6" Justify="Justify.Center" Class="border border-solid mud-border-primary px-2 py-2" Style="@($"background: lavender; position: fixed; bottom: 0; right: 0;")">
+    @{
+        var stats = GetStats();
+        for (var i = 0; i < stats.Length; i += 4)
+        {
+            var p1 = stats[i];
+            var p2 = stats[i + 1];
+            var p3 = stats[i + 2];
+            var p4 = stats[i + 3];
+            <MudItem>
+                <MudPaper Outlined="true" Style="@($"background: WhiteSmoke;")">
+                    <MudStack Row="true" Class="px-1">
+                        <MudText>@StatNamesProvider.GetStatName(p1.StatType):</MudText>
+                        <MudText Class="ml-auto">+@p1.StatNumber</MudText>
+                    </MudStack>
+                    <MudStack Row="true" Class="px-1">
+                        <MudText>@StatNamesProvider.GetStatName(p2.StatType):</MudText>
+                        <MudText Class="ml-auto">+@p2.StatNumber</MudText>
+                    </MudStack>
+                    <MudStack Row="true" Class="px-1">
+                        <MudText>@StatNamesProvider.GetStatName(p3.StatType):</MudText>
+                        <MudText Class="ml-auto">+@p3.StatNumber</MudText>
+                    </MudStack>
+                    <MudStack Row="true" Class="px-1">
+                        <MudText>@StatNamesProvider.GetStatName(p4.StatType):</MudText>
+                        <MudText Class="ml-auto">+@p4.StatNumber</MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        }
+    }
+</MudStack>
+
+
+
+
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+@code {
+
+    private Character Character { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        var buildCode = GetQueryParam("b");
+        if (!string.IsNullOrEmpty(buildCode) && BuildCode.TryDecode(buildCode, out var sharedCharacter) && sharedCharacter != null)
+        {
+            Character = sharedCharacter;
+            CharacterManager.Character = sharedCharacter;
+            Snackbar.Add("Билд загружен по ссылке", Severity.Info);
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(buildCode))
+                Snackbar.Add("Не удалось прочитать билд по этой ссылке — открыт билд по умолчанию", Severity.Warning);
+            Character = CharacterManager.Character;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private string? GetQueryParam(string name)
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = uri.Query;
+        if (string.IsNullOrEmpty(query))
+            return null;
+
+        var pairs = query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var pair in pairs)
+        {
+            var kv = pair.Split('=', 2);
+            if (kv.Length == 2 && Uri.UnescapeDataString(kv[0]) == name)
+                return Uri.UnescapeDataString(kv[1]);
+        }
+
+        return null;
+    }
+
+    private async Task ShareBuildAsync()
+    {
+        var code = BuildCode.Encode(Character);
+        var url = Navigation.ToAbsoluteUri($"Calculator?b={Uri.EscapeDataString(code)}").ToString();
+
+        var parameters = new DialogParameters<ShareBuildDialog> { { x => x.Url, url } };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        await DialogService.ShowAsync<ShareBuildDialog>("Поделиться билдом", parameters, options);
+    }
+
+    private Stat[] GetStats()
+    {
+        return Character.CalculateAllStats().Select(e => new Stat(e.Key, e.Value)).ToArray();
+    }
+
+    private void ChangeCharacterClass(CharacterClass newClass)
+    {
+        Character = Character.CreateFromCharacterClass(newClass);
+    }
+
+    private void ChangeMainWeapon(WeaponType newWeaponType)
+    {
+        Character.MainWeapon = Character.MainWeapon.CreateFromWeaponType(newWeaponType);
+        if (Character.MainWeapon.WeaponHandedClass == WeaponHandedClass.TwoHandedWeapon)
+            Character.SecondWeapon = null;
+        if (Character.MainWeapon.WeaponHandedClass == WeaponHandedClass.OneHandedWeapon && Character.SecondWeapon == null)
+            Character.SecondWeapon = Character.GetDefaultWeapons(Character.CharacterClass).secondWeapon;
+    }
+}

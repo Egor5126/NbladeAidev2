@@ -1,0 +1,51 @@
+@inject IJSRuntime JsRuntime
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        Ссылка на билд
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-2">
+            Отправь эту ссылку — по ней откроется билд в точности как сейчас настроен.
+        </MudText>
+        <MudTextField
+            T="string"
+            Value="@Url"
+            ReadOnly="true"
+            Variant="Variant.Outlined"
+            Label="Ссылка"
+            Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CopyAsync" Color="Color.Primary" Variant="Variant.Filled">
+            Скопировать
+        </MudButton>
+        <MudButton OnClick="Close">
+            Закрыть
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string Url { get; set; }
+
+    private async Task CopyAsync()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Url);
+            Snackbar.Add("Ссылка скопирована", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("Не удалось скопировать автоматически — выделите ссылку и скопируйте вручную", Severity.Warning);
+        }
+    }
+
+    private void Close() => MudDialog.Close();
+}

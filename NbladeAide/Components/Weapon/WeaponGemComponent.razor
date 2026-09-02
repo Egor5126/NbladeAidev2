@@ -1,0 +1,73 @@
+@using Models.BaseModels
+@using Models.Names
+@using Models.Stats
+
+<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Камень потенциала @WeaponGemNumber</MudText>
+
+<MudSelect
+    T="GemLevel"
+    Label="Выберите уровень камня"
+    Value="@WeaponGem.GemLevel"
+    ToStringFunc="@GemNamesProvider.GetWeaponGemLevelName"
+    ValueChanged="UpdateGemLevel">
+
+    @foreach (var classType in Enum.GetValues(typeof(GemLevel)).Cast<GemLevel>())
+    {
+        <MudSelectItem Value="@classType"/>
+    }
+</MudSelect>
+
+<MudAutocomplete
+    T="StatType?"
+    Label="Выберите характеристику камня"
+    Value="@_selectedStatType"
+    SearchFunc="@SearchPotentialStats"
+    ValueChanged="UpdateGemStat"
+    ToStringFunc="@(statType => statType.HasValue ? StatNamesProvider.GetStatName(statType.Value) : string.Empty)"
+    MaxItems="null"
+    Clearable="true"
+    Disabled="@(WeaponGem.GemLevel == GemLevel.None)"/>
+
+@code {
+    [Parameter]
+    public WeaponGem WeaponGem { get; set; }
+
+    [Parameter]
+    public EventCallback<WeaponGem> WeaponGemChanged { get; set; }
+
+    [Parameter]
+    public int WeaponGemNumber { get; set; }
+
+    private StatType? _selectedStatType;
+
+    private async Task UpdateGemLevel(GemLevel gemLevel)
+    {
+        _selectedStatType = null;
+        WeaponGem = WeaponGem.CreateFromInstance(newGemLevel: gemLevel);
+        await WeaponGemChanged.InvokeAsync(WeaponGem);
+    }
+
+    private async Task UpdateGemStat(StatType? statType)
+    {
+        _selectedStatType = statType;
+
+        if (!statType.HasValue)
+            return;
+
+        WeaponGem = WeaponGem.CreateFromInstance(statType: statType.Value);
+        await WeaponGemChanged.InvokeAsync(WeaponGem);
+    }
+
+    private Task<IEnumerable<StatType?>> SearchPotentialStats(string value)
+    {
+        var states = Enum.GetValues<StatType>()
+            .Where(statType => statType != StatType.CharacterSpeed)
+            .Select(statType => (StatType?)statType);
+
+        return Task.FromResult(string.IsNullOrEmpty(value)
+            ? states
+            : states
+                .Where(x => StatNamesProvider.GetStatName(x!.Value)
+                .Contains(value, StringComparison.InvariantCultureIgnoreCase)));
+    }
+}

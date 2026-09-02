@@ -1,0 +1,18 @@
+@using Models.TalentsModels
+
+<MudStack Row="true" AlignItems="AlignItems.Start" Spacing="7">
+    <BranchComponent @bind-Branch="Talents.Branch1" @bind-AvailablePoints="Talents.AvailablePoints" />
+    <BranchComponent @bind-Branch="Talents.Branch2" @bind-AvailablePoints="Talents.AvailablePoints" />
+    <BranchComponent @bind-Branch="Talents.Branch3" @bind-AvailablePoints="Talents.AvailablePoints" />
+</MudStack>
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Количество доступных очков: @Talents.AvailablePoints</MudText>
+
+@code {
+    [Parameter]
+    public Talents Talents { get; set; }
+
+    [Parameter]
+    public EventCallback<Talents> TalentsChanged { get; set; }
+}

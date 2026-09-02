@@ -1,0 +1,29 @@
+@using Models.BaseModels.Weapon
+
+<MudDialog>
+    <TitleContent>
+        Изменение характеристик
+    </TitleContent>
+    <DialogContent>
+        <WeaponComponent @bind-Weapon="Weapon" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public WeaponBase Weapon { get; set; }
+
+    private void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(Weapon));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,84 @@
+@using Models.Stats
+@using Models.BaseModels
+@using Models.Names
+@using Models.BaseModels.Weapon
+@using Models.Providers
+
+<WeaponCompressedInfo Weapon="Weapon" />
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
+
+<MudForm>
+    <MudRadioGroup T="StatCombinationType" SelectedOption="@Weapon.StatCombination.StatCombinationType" SelectedOptionChanged="ChangeStatCombinationType">
+        <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio>
+        <MudRadio Value="@StatCombinationType.FourStats" Color="Color.Secondary">4 хар-ки</MudRadio>
+    </MudRadioGroup>
+</MudForm>
+
+<MudAutocomplete
+    T="StatCombination"
+    Label="Выберите характеристики предмета"
+    Value="@_selectedStatCombination"
+    SearchFunc="@SearchPotentialStatCombinations"
+    ValueChanged="UpdateStatCombination"
+    MaxItems="null"
+    Clearable="true" />
+
+<MudSelect
+    T="StuffRuneOfImprovementLevel"
+    Label="Выберите уровень руны улучшения"
+    Value="@Weapon.RuneOfImprovementLevel"
+    ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
+    ValueChanged="UpdateRuneLevel">
+
+    @foreach (var classType in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
+    {
+        <MudSelectItem Value="@classType"/>
+    }
+</MudSelect>
+
+@for (var i = 0; i < Weapon.WeaponGems.Count; ++i)
+{
+    // ReSharper disable once InlineTemporaryVariable - избежание замыкания
+    var currentIndex = i;
+    <br />
+    <WeaponGemComponent @bind-WeaponGem="Weapon.WeaponGems[currentIndex]" WeaponGemNumber="currentIndex + 1" />
+}
+
+@code {
+    [Parameter]
+    public WeaponBase Weapon { get; set; }
+
+    [Parameter]
+    public EventCallback<WeaponBase> WeaponChanged { get; set; }
+
+    private StatCombination? _selectedStatCombination;
+
+    private Task<IEnumerable<StatCombination>> SearchPotentialStatCombinations(string value)
+    {
+        var states = Weapon.PotentialStatCombinations;
+
+        return Task.FromResult(FilterService.FilterStatCombinations(states, value));
+    }
+
+    private async Task UpdateStatCombination(StatCombination newStatCombination)
+    {
+        _selectedStatCombination = newStatCombination;
+        Weapon = Weapon.CreateFromInstance(newStatCombination);
+        await WeaponChanged.InvokeAsync(Weapon);
+    }
+
+    private async Task UpdateRuneLevel(StuffRuneOfImprovementLevel runeLevel)
+    {
+        Weapon = Weapon.CreateFromInstance(newRuneLevel: runeLevel);
+        await WeaponChanged.InvokeAsync(Weapon);
+    }
+
+    private async Task ChangeStatCombinationType(StatCombinationType statCombinationType)
+    {
+        _selectedStatCombination = null;
+        Weapon = Weapon.CreateFromInstance(StatCombination.GetRandomStatCombination(statCombinationType));
+        await WeaponChanged.InvokeAsync(Weapon);
+    }
+}

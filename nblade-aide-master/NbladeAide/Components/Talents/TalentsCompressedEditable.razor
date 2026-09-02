@@ -1,0 +1,35 @@
+@using Models.TalentsModels
+
+@inject IDialogService DialogService
+
+<TalentsCompressedInfo Talents="Talents" />
+
+<br />
+
+<MudButton @onclick="@OpenDialogAsync" Variant="Variant.Outlined" Color="Color.Primary">
+    Редактировать
+</MudButton>
+
+@code {
+    [Parameter]
+    public Talents Talents { get; set; }
+
+    [Parameter]
+    public EventCallback<Talents> TalentsChanged { get; set; }
+
+    private async Task OpenDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        var parameters = new DialogParameters<TalentsEditDialog> { { x => x.Talents, Talents } };
+
+        var dialog = await DialogService.ShowAsync<TalentsEditDialog>("Simple Dialog", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var p = (Talents)result.Data;
+            Talents = p;
+            await TalentsChanged.InvokeAsync(Talents);
+        }
+    }
+}

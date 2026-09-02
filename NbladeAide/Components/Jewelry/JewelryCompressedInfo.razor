@@ -1,0 +1,24 @@
+@using Models.BaseModels.Jewelry
+@using Models.Stats
+
+<MudText Typo="Typo.h6" Style="@($"font-size: large;")">@Jewelry.Name</MudText>
+<MudText Typo="Typo.subtitle2" Style="@($"color:{Colors.Grey.Darken1};font-style: italic;")">(@Jewelry.SimpleName)</MudText>
+<br />
+
+<MudItem>
+    <MudText Typo="Typo.body1">@Jewelry.BaseArmorStat</MudText>
+    <MudText Typo="Typo.body1">@Jewelry.BaseMagicArmorStat</MudText>
+    @foreach (var stat in Jewelry.StatCombination.Stats)
+    {
+        <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@stat</MudText>
+    }
+    @if (Jewelry.StatCombination.StatCombinationType == StatCombinationType.ThreeStats)
+    {
+        <MudText Typo="Typo.body1" Style="@($"white-space: pre-wrap;")">@Environment.NewLine</MudText>
+    }
+</MudItem>
+
+@code {
+    [Parameter]
+    public JewelryBase Jewelry { get; set; }
+}

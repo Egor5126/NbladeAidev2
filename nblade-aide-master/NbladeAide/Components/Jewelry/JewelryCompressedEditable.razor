@@ -1,0 +1,37 @@
+@using Models.BaseModels.Jewelry
+
+@inject IDialogService DialogService
+
+@typeparam TJewelry where TJewelry : JewelryBase
+
+<JewelryCompressedInfo Jewelry="Jewelry" />
+
+<br />
+
+<MudButton @onclick="@OpenDialogAsync" Variant="Variant.Outlined" Color="Color.Primary">
+    Редактировать
+</MudButton>
+
+@code {
+    [Parameter]
+    public TJewelry Jewelry { get; set; }
+
+    [Parameter]
+    public EventCallback<TJewelry> JewelryChanged { get; set; }
+
+    private async Task OpenDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        var parameters = new DialogParameters<JewelryEditDialog<TJewelry>> { { x => x.Jewelry, Jewelry } };
+
+        var dialog = await DialogService.ShowAsync<JewelryEditDialog<TJewelry>>("Simple Dialog", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var p = (TJewelry)result.Data;
+            Jewelry = p;
+            await JewelryChanged.InvokeAsync(Jewelry);
+        }
+    }
+}

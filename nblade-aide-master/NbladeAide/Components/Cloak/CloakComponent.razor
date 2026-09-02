@@ -1,0 +1,91 @@
+@using Models.Stats
+@using Models.BaseModels
+@using Models.Names
+@using Models.BaseModels.Cloak
+@using Models.Providers
+
+<CloakCompressedInfo Cloak="Cloak" />
+
+<br />
+<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
+
+<MudForm>
+    <MudRadioGroup T="StatCombinationType" SelectedOption="@Cloak.StatCombination.StatCombinationType" SelectedOptionChanged="ChangeStatCombinationType">
+        <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio>
+        <MudRadio Value="@StatCombinationType.FourStats" Color="Color.Secondary">4 хар-ки</MudRadio>
+    </MudRadioGroup>
+</MudForm>
+
+<MudAutocomplete
+    T="StatCombination"
+    Label="Выберите характеристики предмета"
+    Value="@Cloak.StatCombination"
+    SearchFunc="@SearchPotentialStatCombinations"
+    ValueChanged="UpdateStatCombination"
+    MaxItems="null"
+    Clearable="true" />
+
+<MudSelect
+    T="StuffRuneOfImprovementLevel"
+    Label="Выберите уровень руны улучшения"
+    Value="@Cloak.RuneOfImprovementLevel"
+    ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
+    ValueChanged="UpdateRuneLevel">
+
+    @foreach (var classType in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
+    {
+        <MudSelectItem Value="@classType"/>
+    }
+</MudSelect>
+
+<MudSelect
+    T="StuffRarity"
+    Label="Выберите редкость плаща"
+    Value="@Cloak.StuffRarity"
+    ToStringFunc="@CommonNamesProvider.GetStuffRarityName"
+    ValueChanged="UpdateStuffRarity">
+
+    @foreach (var classType in Enum.GetValues(typeof(StuffRarity)).Cast<StuffRarity>())
+    {
+        <MudSelectItem Value="@classType"/>
+    }
+</MudSelect>
+
+@code {
+    [Parameter]
+    public Cloak Cloak { get; set; }
+
+    [Parameter]
+    public EventCallback<Cloak> CloakChanged { get; set; }
+
+    private Task<IEnumerable<StatCombination>> SearchPotentialStatCombinations(string value)
+    {
+        var states = Cloak.PotentialStatCombinations;
+
+        return Task.FromResult(FilterService.FilterStatCombinations(states, value));
+    }
+
+    private async Task UpdateStatCombination(StatCombination newStatCombination)
+    {
+        Cloak = Cloak.CreateFromInstance(newStatCombination);
+        await CloakChanged.InvokeAsync(Cloak);
+    }
+
+    private async Task UpdateRuneLevel(StuffRuneOfImprovementLevel runeLevel)
+    {
+        Cloak = Cloak.CreateFromInstance(newRuneLevel: runeLevel);
+        await CloakChanged.InvokeAsync(Cloak);
+    }
+
+    private async Task ChangeStatCombinationType(StatCombinationType statCombinationType)
+    {
+        Cloak = Cloak.CreateFromInstance(StatCombination.GetRandomStatCombination(statCombinationType));
+        await CloakChanged.InvokeAsync(Cloak);
+    }
+
+    private async Task UpdateStuffRarity(StuffRarity stuffRarity)
+    {
+        Cloak = Cloak.CreateFromInstance(newStuffRarity: stuffRarity);
+        await CloakChanged.InvokeAsync(Cloak);
+    }
+}
