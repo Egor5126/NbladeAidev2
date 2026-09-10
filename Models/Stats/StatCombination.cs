@@ -7,7 +7,7 @@ public abstract class StatCombination
     public abstract Stat[] Stats { get; }
     public abstract Stat[] OriginStats { get; }
 
-    public StatCombination UseMultiplier(double multiplier)
+    public virtual StatCombination UseMultiplier(double multiplier)
     {
         foreach (var stat in Stats)
         {
@@ -17,7 +17,7 @@ public abstract class StatCombination
         return this;
     }
 
-    public StatCombination ResetMultipliers()
+    public virtual StatCombination ResetMultipliers()
     {
         for (var i = 0; i < OriginStats.Length; ++i)
         {

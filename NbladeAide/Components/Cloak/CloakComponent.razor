@@ -51,6 +51,8 @@
     }
 </MudSelect>
 
+<StatCombinationValuesEditor StatCombination="Cloak.StatCombination" OnChanged="@(() => CloakChanged.InvokeAsync(Cloak))" />
+
 @code {
     [Parameter]
     public Cloak Cloak { get; set; }
@@ -79,7 +81,7 @@
 
     private async Task ChangeStatCombinationType(StatCombinationType statCombinationType)
     {
-        Cloak = Cloak.CreateFromInstance(StatCombination.GetRandomStatCombination(statCombinationType));
+        Cloak = Cloak.CreateFromInstance(EmptyStatCombination.For(statCombinationType));
         await CloakChanged.InvokeAsync(Cloak);
     }
 

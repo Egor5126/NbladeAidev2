@@ -11,22 +11,9 @@
 <br />
 <MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
 
-<MudForm>
-    <MudRadioGroup T="StatCombinationType" SelectedOption="@Jewelry.StatCombination.StatCombinationType" SelectedOptionChanged="ChangeStatCombinationType">
-        @* Вещи с 3 характеристиками отключены (кроме плаща) *@
-        @* <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio> *@
-        <MudRadio Value="@StatCombinationType.FourStats" Color="Color.Secondary">4 хар-ки</MudRadio>
-    </MudRadioGroup>
-</MudForm>
+@* Выбор готовой комбинации из списка временно скрыт — характеристики теперь выбираются вручную ниже *@
 
-<MudAutocomplete
-    T="StatCombination"
-    Label="Выберите характеристики предмета"
-    Value="@Jewelry.StatCombination"
-    SearchFunc="@SearchPotentialStatCombinations"
-    ValueChanged="UpdateStatCombination"
-    MaxItems="null"
-    Clearable="true" />
+<ManualStatCombinationEditor StatCombination="Jewelry.StatCombination" StatCombinationChanged="UpdateStatCombination" />
 
 <MudSelect
     T="JewelryRuneOfImprovementLevel"
@@ -64,13 +51,6 @@
     [Parameter]
     public EventCallback<TJewelry> JewelryChanged { get; set; }
 
-    private Task<IEnumerable<StatCombination>> SearchPotentialStatCombinations(string value)
-    {
-        var states = Jewelry.PotentialStatCombinations;
-
-        return Task.FromResult(FilterService.FilterStatCombinations(states, value));
-    }
-
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {
         Jewelry = (TJewelry)Jewelry.CreateFromInstance(newStatCombination);
@@ -80,12 +60,6 @@
     private async Task UpdateRuneLevel(JewelryRuneOfImprovementLevel runeLevel)
     {
         Jewelry = (TJewelry)Jewelry.CreateFromInstance(newRuneLevel: runeLevel);
-        await JewelryChanged.InvokeAsync(Jewelry);
-    }
-
-    private async Task ChangeStatCombinationType(StatCombinationType statCombinationType)
-    {
-        Jewelry = (TJewelry)Jewelry.CreateFromInstance(StatCombination.GetRandomStatCombination(statCombinationType));
         await JewelryChanged.InvokeAsync(Jewelry);
     }
 

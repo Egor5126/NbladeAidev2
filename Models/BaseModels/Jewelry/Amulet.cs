@@ -5,8 +5,9 @@ namespace Models.BaseModels.Jewelry;
 public class Amulet : JewelryBase
 {
     public Amulet() : this(
-        // Вещи с 3 характеристиками отключены (кроме плаща) — новая бижутерия всегда создаётся с 4 характеристиками
-        StatCombination.GetRandomStatCombination(StatCombinationType.FourStats),
+        // Вещи с 3 характеристиками отключены (кроме плаща) — новая бижутерия всегда создаётся с 4 характеристиками.
+        // Конкретная комбинация характеристик изначально не выбрана — её должен выбрать игрок.
+        EmptyStatCombination.FourStats,
         StuffRarity.Orange,
         JewelryRuneOfImprovementLevel.Level10)
     {

@@ -1,0 +1,96 @@
+@using Models.Names
+@using Models.Stats
+
+@for (var i = 0; i < SlotCount; i++)
+{
+    var index = i;
+    <MudGrid Class="mb-1">
+        <MudItem xs="7">
+            <MudAutocomplete T="StatType?"
+                             Label="@($"Характеристика {index + 1}")"
+                             Value="@_slots[index].StatType"
+                             SearchFunc="@SearchAvailableStats"
+                             ValueChanged="@(newType => UpdateSlotType(index, newType))"
+                             ToStringFunc="@(t => t.HasValue ? StatNamesProvider.GetStatName(t.Value) : string.Empty)"
+                             MaxItems="null"
+                             Clearable="true" />
+        </MudItem>
+        <MudItem xs="5">
+            <MudNumericField T="int"
+                             Label="Значение"
+                             Value="@_slots[index].Value"
+                             Variant="Variant.Outlined"
+                             Disabled="@(!_slots[index].StatType.HasValue)"
+                             ValueChanged="@(newValue => UpdateSlotValue(index, newValue))" />
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter]
+    public StatCombination StatCombination { get; set; }
+
+    [Parameter]
+    public EventCallback<StatCombination> StatCombinationChanged { get; set; }
+
+    [Parameter]
+    public int SlotCount { get; set; } = 4;
+
+    private (StatType? StatType, int Value)[] _slots = Array.Empty<(StatType?, int)>();
+    private StatCombination? _lastSyncedCombination;
+
+    protected override void OnParametersSet()
+    {
+        if (_slots.Length != SlotCount || !ReferenceEquals(StatCombination, _lastSyncedCombination))
+        {
+            _lastSyncedCombination = StatCombination;
+            var stats = StatCombination.Stats;
+            var slots = new (StatType? StatType, int Value)[SlotCount];
+            for (var i = 0; i < SlotCount; i++)
+            {
+                slots[i] = i < stats.Length ? (stats[i].StatType, stats[i].StatNumber) : (null, 0);
+            }
+            _slots = slots;
+        }
+    }
+
+    private Task<IEnumerable<StatType?>> SearchAvailableStats(string value)
+    {
+        // Игра допускает до 4 одинаковых характеристик на одной вещи — не исключаем
+        // типы, уже выбранные в других полях.
+        var options = Enum.GetValues<StatType>()
+            .Where(t => t != StatType.CharacterSpeed)
+            .Where(t => string.IsNullOrWhiteSpace(value)
+                        || StatNamesProvider.GetStatName(t).Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(t => (StatType?)t);
+
+        return Task.FromResult(options);
+    }
+
+    private async Task UpdateSlotType(int index, StatType? newType)
+    {
+        _slots[index] = (newType, _slots[index].Value);
+        await CommitAsync();
+    }
+
+    private async Task UpdateSlotValue(int index, int newValue)
+    {
+        _slots[index] = (_slots[index].StatType, newValue);
+        await CommitAsync();
+    }
+
+    private async Task CommitAsync()
+    {
+        var stats = _slots
+            .Where(s => s.StatType.HasValue)
+            .Select(s => new Stat(s.StatType!.Value, s.Value))
+            .ToArray();
+
+        StatCombination newCombination = stats.Length == 0
+            ? EmptyStatCombination.FourStats
+            : new CustomStatCombination(StatCombinationType.FourStats, stats);
+
+        _lastSyncedCombination = newCombination;
+        await StatCombinationChanged.InvokeAsync(newCombination);
+    }
+}

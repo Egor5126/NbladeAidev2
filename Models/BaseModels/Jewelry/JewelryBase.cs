@@ -27,7 +27,7 @@ public abstract class JewelryBase
             .UseMultiplier(stuffRarityMultiplier)
             .UseMultiplier(runeMultiplier);
         Name = JewelryNamesProvider.GetJewelryName(jewelryType, stuffRarity, statCombination.StatCombinationType)
-               + " " + statCombination.Name
+               + (string.IsNullOrEmpty(statCombination.Name) ? "" : " " + statCombination.Name)
                + (jewelryRuneOfImprovementLevel != JewelryRuneOfImprovementLevel.None
                    ? $" +{(int)jewelryRuneOfImprovementLevel}"
                    : "");

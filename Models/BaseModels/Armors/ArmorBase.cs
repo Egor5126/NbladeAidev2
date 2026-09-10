@@ -7,8 +7,9 @@ namespace Models.BaseModels.Armors;
 public abstract class ArmorBase
 {
     protected ArmorBase(CharacterClass characterClass, ArmorType armorType) : this(
-        // Вещи с 3 характеристиками отключены (кроме плаща) — новая броня всегда создаётся с 4 характеристиками
-        StatCombination.GetRandomStatCombination(StatCombinationType.FourStats),
+        // Вещи с 3 характеристиками отключены (кроме плаща) — новая броня всегда создаётся с 4 характеристиками.
+        // Конкретная комбинация характеристик изначально не выбрана — её должен выбрать игрок.
+        EmptyStatCombination.FourStats,
         characterClass,
         armorType,
         StuffRuneOfImprovementLevel.Level10,
@@ -93,7 +94,7 @@ public abstract class ArmorBase
         StuffRuneOfImprovementLevel runeOfImprovementLevel)
     {
         return ArmorNamesProvider.GetArmorName(armorType, statCombination.StatCombinationType, characterClass)
-               + " " + statCombination.Name
+               + (string.IsNullOrEmpty(statCombination.Name) ? "" : " " + statCombination.Name)
                + (runeOfImprovementLevel != StuffRuneOfImprovementLevel.None
                    ? $" +{(int)runeOfImprovementLevel}"
                    : "");

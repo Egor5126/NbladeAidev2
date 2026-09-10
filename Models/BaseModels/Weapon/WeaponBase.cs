@@ -28,7 +28,7 @@ public abstract class WeaponBase
             .UseMultiplier(greenMultiplier)
             .UseMultiplier(runeMultiplier);
         Name = WeaponNamesProvider.GetWeaponName(weaponType, statCombination.StatCombinationType)
-               + " " + statCombination.Name
+               + (string.IsNullOrEmpty(statCombination.Name) ? "" : " " + statCombination.Name)
                + (runeOfImprovementLevel != StuffRuneOfImprovementLevel.None
                    ? $" +{(int)runeOfImprovementLevel}"
                    : "");

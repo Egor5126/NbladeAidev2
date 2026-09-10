@@ -1,0 +1,32 @@
+@using Models.Names
+@using Models.Stats
+
+@if (StatCombination.Stats.Length > 0)
+{
+    <MudText Typo="Typo.subtitle2" Style="@($"margin-top: 8px;")">Значения характеристик</MudText>
+
+    @foreach (var stat in StatCombination.Stats)
+    {
+        <MudNumericField T="int"
+                         Value="stat.StatNumber"
+                         Label="@StatNamesProvider.GetStatName(stat.StatType)"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense"
+                         Class="mb-1"
+                         ValueChanged="@(newValue => UpdateStatValue(stat, newValue))" />
+    }
+}
+
+@code {
+    [Parameter]
+    public StatCombination StatCombination { get; set; }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private async Task UpdateStatValue(Stat stat, int newValue)
+    {
+        stat.StatNumber = newValue;
+        await OnChanged.InvokeAsync();
+    }
+}

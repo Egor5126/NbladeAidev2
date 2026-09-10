@@ -9,22 +9,9 @@
 <br />
 <MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
 
-<MudForm>
-    <MudRadioGroup T="StatCombinationType" SelectedOption="@Weapon.StatCombination.StatCombinationType" SelectedOptionChanged="ChangeStatCombinationType">
-        @* Вещи с 3 характеристиками отключены (кроме плаща) *@
-        @* <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio> *@
-        <MudRadio Value="@StatCombinationType.FourStats" Color="Color.Secondary">4 хар-ки</MudRadio>
-    </MudRadioGroup>
-</MudForm>
+@* Выбор готовой комбинации из списка временно скрыт — характеристики теперь выбираются вручную ниже *@
 
-<MudAutocomplete
-    T="StatCombination"
-    Label="Выберите характеристики предмета"
-    Value="@_selectedStatCombination"
-    SearchFunc="@SearchPotentialStatCombinations"
-    ValueChanged="UpdateStatCombination"
-    MaxItems="null"
-    Clearable="true" />
+<ManualStatCombinationEditor StatCombination="Weapon.StatCombination" StatCombinationChanged="UpdateStatCombination" />
 
 <MudSelect
     T="StuffRuneOfImprovementLevel"
@@ -54,18 +41,8 @@
     [Parameter]
     public EventCallback<WeaponBase> WeaponChanged { get; set; }
 
-    private StatCombination? _selectedStatCombination;
-
-    private Task<IEnumerable<StatCombination>> SearchPotentialStatCombinations(string value)
-    {
-        var states = Weapon.PotentialStatCombinations;
-
-        return Task.FromResult(FilterService.FilterStatCombinations(states, value));
-    }
-
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {
-        _selectedStatCombination = newStatCombination;
         Weapon = Weapon.CreateFromInstance(newStatCombination);
         await WeaponChanged.InvokeAsync(Weapon);
     }
@@ -73,13 +50,6 @@
     private async Task UpdateRuneLevel(StuffRuneOfImprovementLevel runeLevel)
     {
         Weapon = Weapon.CreateFromInstance(newRuneLevel: runeLevel);
-        await WeaponChanged.InvokeAsync(Weapon);
-    }
-
-    private async Task ChangeStatCombinationType(StatCombinationType statCombinationType)
-    {
-        _selectedStatCombination = null;
-        Weapon = Weapon.CreateFromInstance(StatCombination.GetRandomStatCombination(statCombinationType));
         await WeaponChanged.InvokeAsync(Weapon);
     }
 }

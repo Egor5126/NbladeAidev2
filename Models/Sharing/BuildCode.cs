@@ -136,10 +136,10 @@ public static class BuildCode
 
     private static void EncodeCloak(Cloak cloak, List<int> parts)
     {
-        parts.Add((int)cloak.StatCombination.StatCombinationType);
-        parts.Add(GetCombinationIndex(cloak.StatCombination));
+        EncodeCombination(cloak.StatCombination, parts);
         parts.Add((int)cloak.StuffRarity);
         parts.Add((int)cloak.RuneOfImprovementLevel);
+        EncodeStatValues(cloak.StatCombination, parts);
     }
 
     private static Cloak DecodeCloak(Cursor cursor, Cloak current)
@@ -147,13 +147,14 @@ public static class BuildCode
         var combination = ReadCombination(cursor);
         var stuffRarity = (StuffRarity)cursor.Next();
         var runeLevel = (StuffRuneOfImprovementLevel)cursor.Next();
-        return current.CreateFromInstance(combination, runeLevel, stuffRarity);
+        var result = current.CreateFromInstance(combination, runeLevel, stuffRarity);
+        DecodeStatValues(cursor, result.StatCombination);
+        return result;
     }
 
     private static void EncodeJewelry(JewelryBase jewelry, List<int> parts)
     {
-        parts.Add((int)jewelry.StatCombination.StatCombinationType);
-        parts.Add(GetCombinationIndex(jewelry.StatCombination));
+        EncodeCombination(jewelry.StatCombination, parts);
         parts.Add((int)jewelry.StuffRarity);
         parts.Add((int)jewelry.JewelryRuneOfImprovementLevel);
     }
@@ -168,8 +169,7 @@ public static class BuildCode
 
     private static void EncodeArmor(ArmorBase armor, List<int> parts)
     {
-        parts.Add((int)armor.StatCombination.StatCombinationType);
-        parts.Add(GetCombinationIndex(armor.StatCombination));
+        EncodeCombination(armor.StatCombination, parts);
         parts.Add((int)armor.RuneOfImprovementLevel);
         parts.Add(armor.Gem1.StatType.HasValue ? (int)armor.Gem1.StatType.Value : -1);
         parts.Add((int)armor.Gem1.GemLevel);
@@ -198,8 +198,7 @@ public static class BuildCode
     private static void EncodeWeapon(WeaponBase weapon, List<int> parts)
     {
         parts.Add((int)weapon.WeaponType);
-        parts.Add((int)weapon.StatCombination.StatCombinationType);
-        parts.Add(GetCombinationIndex(weapon.StatCombination));
+        EncodeCombination(weapon.StatCombination, parts);
         parts.Add((int)weapon.RuneOfImprovementLevel);
         parts.Add(weapon.WeaponGems.Count);
         foreach (var gem in weapon.WeaponGems)
@@ -233,10 +232,73 @@ public static class BuildCode
         return weapon;
     }
 
+    // Хранит значения характеристик выбранной комбинации, которые игрок мог
+    // вручную поправить в редакторе — чтобы они не терялись при шаринге билда.
+    private static void EncodeStatValues(StatCombination combination, List<int> parts)
+    {
+        parts.Add(combination.Stats.Length);
+        foreach (var stat in combination.Stats)
+        {
+            parts.Add(stat.StatNumber);
+        }
+    }
+
+    private static void DecodeStatValues(Cursor cursor, StatCombination combination)
+    {
+        var count = cursor.Next();
+        for (var i = 0; i < count; i++)
+        {
+            var value = cursor.Next();
+            if (i < combination.Stats.Length)
+                combination.Stats[i].StatNumber = value;
+        }
+    }
+
+    // Сохраняет комбинацию характеристик вещи: либо ссылку на именованную комбинацию
+    // из общего списка (индекс >= 0), либо специальное состояние — "ещё не выбрана"
+    // (-1) или "собрана игроком вручную" (-2, с полным списком стат+значение).
+    private static void EncodeCombination(StatCombination combination, List<int> parts)
+    {
+        parts.Add((int)combination.StatCombinationType);
+
+        if (combination is CustomStatCombination)
+        {
+            parts.Add(-2);
+            parts.Add(combination.Stats.Length);
+            foreach (var stat in combination.Stats)
+            {
+                parts.Add((int)stat.StatType);
+                parts.Add(stat.StatNumber);
+            }
+            return;
+        }
+
+        parts.Add(GetCombinationIndex(combination));
+    }
+
     private static StatCombination ReadCombination(Cursor cursor)
     {
         var type = (StatCombinationType)cursor.Next();
         var index = cursor.Next();
+
+        // -1 значит, что игрок ещё не выбрал конкретную комбинацию характеристик для этой вещи.
+        if (index == -1)
+            return EmptyStatCombination.For(type);
+
+        // -2 значит, что комбинация собрана игроком вручную — читаем её статы и значения целиком.
+        if (index == -2)
+        {
+            var count = cursor.Next();
+            var stats = new Stat[count];
+            for (var i = 0; i < count; i++)
+            {
+                var statType = (StatType)cursor.Next();
+                var statNumber = cursor.Next();
+                stats[i] = new Stat(statType, statNumber);
+            }
+            return new CustomStatCombination(type, stats);
+        }
+
         var pool = type == StatCombinationType.ThreeStats
             ? StatCombinationsList.ThreeStatCombinations()
             : StatCombinationsList.FourStateCombinations();
@@ -250,6 +312,10 @@ public static class BuildCode
 
     private static int GetCombinationIndex(StatCombination combination)
     {
+        // Комбинация ещё не выбрана игроком — сохраняем это состояние отдельным индексом.
+        if (combination is EmptyStatCombination)
+            return -1;
+
         var pool = combination.StatCombinationType == StatCombinationType.ThreeStats
             ? StatCombinationsList.ThreeStatCombinations()
             : StatCombinationsList.FourStateCombinations();

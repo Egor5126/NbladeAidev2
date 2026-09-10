@@ -7,7 +7,8 @@ namespace Models.BaseModels.Cloak;
 public class Cloak
 {
     public Cloak() : this(
-        StatCombination.GetRandomStatCombination(),
+        // Конкретная комбинация характеристик изначально не выбрана — её должен выбрать игрок.
+        EmptyStatCombination.ThreeStats,
         StuffRarity.Orange,
         StuffRuneOfImprovementLevel.Level10) {}
 
@@ -33,7 +34,7 @@ public class Cloak
             .UseMultiplier(stuffRarityMultiplier)
             .UseMultiplier(runeMultiplier);
         Name = CloakNamesProvider.GetCloakName()
-               + " " + statCombination.Name
+               + (string.IsNullOrEmpty(statCombination.Name) ? "" : " " + statCombination.Name)
                + (runeOfImprovementLevel != StuffRuneOfImprovementLevel.None
                    ? $" +{(int)runeOfImprovementLevel}"
                    : "");

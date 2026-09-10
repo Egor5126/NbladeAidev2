@@ -6,8 +6,9 @@ public class Crossbow : WeaponBase
 {
     public Crossbow(CharacterClass characterClass, WeaponOrder weaponOrder)
         : this(
-            // Вещи с 3 характеристиками отключены (кроме плаща) — новое оружие всегда создаётся с 4 характеристиками
-            StatCombination.GetRandomStatCombination(StatCombinationType.FourStats),
+            // Вещи с 3 характеристиками отключены (кроме плаща) — новое оружие всегда создаётся с 4 характеристиками.
+            // Конкретная комбинация характеристик изначально не выбрана — её должен выбрать игрок.
+            EmptyStatCombination.FourStats,
             characterClass,
             StuffRuneOfImprovementLevel.Level10,
             weaponOrder,
