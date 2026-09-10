@@ -69,9 +69,10 @@ public abstract class JewelryBase
         double stuffRarityMultiplier,
         double runeMultiplier)
     {
-        var statCombinations = statCombinationType == StatCombinationType.ThreeStats 
+        // Вещи с 3 характеристиками отключены (кроме плаща) — оставляем только вариант с 4 характеристиками
+        var statCombinations = /*statCombinationType == StatCombinationType.ThreeStats
             ? StatCombinationsList.ThreeStatCombinations()
-            : StatCombinationsList.FourStateCombinations();
+            : */StatCombinationsList.FourStateCombinations();
         foreach (var statCombination in statCombinations)
         {
             statCombination

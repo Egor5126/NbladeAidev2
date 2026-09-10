@@ -14,7 +14,7 @@ public class Highway : ArmorBase
         CharacterClass characterClass,
         StuffRuneOfImprovementLevel runeOfImprovementLevel,
         Gem gem1,
-        Gem gem2)
+        ConcentrationGem gem2)
         : base(statCombination, characterClass, ArmorType.Highway, runeOfImprovementLevel, gem1, gem2)
     {
     }

@@ -12,7 +12,8 @@
 
 <MudForm>
     <MudRadioGroup T="StatCombinationType" SelectedOption="@Armor.StatCombination.StatCombinationType" SelectedOptionChanged="ChangeStatCombinationType">
-        <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio>
+        @* Вещи с 3 характеристиками отключены (кроме плаща) *@
+        @* <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio> *@
         <MudRadio Value="@StatCombinationType.FourStats" Color="Color.Secondary">4 хар-ки</MudRadio>
     </MudRadioGroup>
 </MudForm>
@@ -42,7 +43,7 @@
 <br />
 <GemComponent @bind-Gem="Armor.Gem1"/>
 <br />
-<GemComponent @bind-Gem="Armor.Gem2"/>
+<ConcentrationGemComponent @bind-ConcentrationGem="Armor.Gem2"/>
 
 @code {
     [Parameter]

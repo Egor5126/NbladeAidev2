@@ -6,7 +6,18 @@ namespace Models.Names;
 
 public static class GemNamesProvider
 {
-    public static string GetGemLevelName(GemLevel gemLevel)
+    public static string GetGemLevelName(PowerStoneLevel gemLevel)
+    {
+        return gemLevel switch
+        {
+            PowerStoneLevel.None => "нет",
+            PowerStoneLevel.Level6 => "уровень 6",
+            PowerStoneLevel.Level10 => "уровень 10",
+            _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
+        };
+    }
+
+    private static string GetGemLevelName(GemLevel gemLevel)
     {
         return gemLevel switch
         {
@@ -27,5 +38,20 @@ public static class GemNamesProvider
         if (gemLevel == GemLevel.None)
             return gemLevelName;
         return $"{gemLevelName}: {(StatNumberProvider.GetWeaponGemMultiplier(gemLevel)).ToPercentString()}";
+    }
+
+    public static string GetConcentrationStoneLevelName(ConcentrationStoneLevel gemLevel)
+    {
+        var gemLevelName = gemLevel switch
+        {
+            ConcentrationStoneLevel.None => "нет",
+            ConcentrationStoneLevel.Level6 => "уровень 6",
+            ConcentrationStoneLevel.Level10 => "уровень 10",
+            _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
+        };
+
+        if (gemLevel == ConcentrationStoneLevel.None)
+            return gemLevelName;
+        return $"{gemLevelName}: {(StatNumberProvider.GetConcentrationStoneMultiplier(gemLevel)).ToPercentString()}";
     }
 }

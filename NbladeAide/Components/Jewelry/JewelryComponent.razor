@@ -13,7 +13,8 @@
 
 <MudForm>
     <MudRadioGroup T="StatCombinationType" SelectedOption="@Jewelry.StatCombination.StatCombinationType" SelectedOptionChanged="ChangeStatCombinationType">
-        <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio>
+        @* Вещи с 3 характеристиками отключены (кроме плаща) *@
+        @* <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio> *@
         <MudRadio Value="@StatCombinationType.FourStats" Color="Color.Secondary">4 хар-ки</MudRadio>
     </MudRadioGroup>
 </MudForm>

@@ -9,8 +9,7 @@ public static class RuneNamesProvider
         return runeLevel switch
         {
             StuffRuneOfImprovementLevel.None => "нет",
-            StuffRuneOfImprovementLevel.Level8 => "+8",
-            StuffRuneOfImprovementLevel.Level12 => "+12",
+            StuffRuneOfImprovementLevel.Level10 => "+10",
             _ => throw new ArgumentOutOfRangeException(nameof(runeLevel), runeLevel, null)
         };
     }
@@ -20,8 +19,7 @@ public static class RuneNamesProvider
         return runeLevel switch
         {
             JewelryRuneOfImprovementLevel.None => "нет",
-            JewelryRuneOfImprovementLevel.Level8 => "+8",
-            JewelryRuneOfImprovementLevel.Level12 => "+12",
+            JewelryRuneOfImprovementLevel.Level10 => "+10",
             _ => throw new ArgumentOutOfRangeException(nameof(runeLevel), runeLevel, null)
         };
     }

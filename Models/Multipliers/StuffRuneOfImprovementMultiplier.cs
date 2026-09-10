@@ -9,8 +9,7 @@ public static class StuffRuneOfImprovementMultiplier
         return runeLevel switch
         {
             StuffRuneOfImprovementLevel.None => 1,
-            StuffRuneOfImprovementLevel.Level8 => 1.84,
-            StuffRuneOfImprovementLevel.Level12 => 2.0,
+            StuffRuneOfImprovementLevel.Level10 => 2.0,
             _ => throw new ArgumentOutOfRangeException(nameof(runeLevel), runeLevel, null)
         };
     }

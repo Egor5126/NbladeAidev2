@@ -115,7 +115,17 @@ public class Character
         }
 
         var weaponGemsMultipliers = GetWeaponGemsMultipliers();
-        foreach (var multiplier in weaponGemsMultipliers)
+        var concentrationGemsMultipliers = GetConcentrationGemsMultipliers();
+        var allMultipliers = new Dictionary<StatType, double>(weaponGemsMultipliers);
+        foreach (var multiplier in concentrationGemsMultipliers)
+        {
+            if (!allMultipliers.TryGetValue(multiplier.Key, out _))
+                allMultipliers[multiplier.Key] = multiplier.Value;
+            else
+                allMultipliers[multiplier.Key] += multiplier.Value;
+        }
+
+        foreach (var multiplier in allMultipliers)
         {
             finalStats[multiplier.Key] = (int)Math.Floor(finalStats[multiplier.Key] * (multiplier.Value + 1));
         }
@@ -189,6 +199,34 @@ public class Character
                 multipliers[weaponGem.StatType] += StatNumberProvider.GetWeaponGemMultiplier(weaponGem.GemLevel);
         }
         
+        return multipliers;
+    }
+
+    private Dictionary<StatType, double> GetConcentrationGemsMultipliers()
+    {
+        var multipliers = new Dictionary<StatType, double>();
+        var concentrationGems = new[]
+        {
+            Helmet.Gem2,
+            ShoulderPad.Gem2,
+            Cuirass.Gem2,
+            Highway.Gem2,
+            Gloves.Gem2,
+            Bracers.Gem2,
+            Shoes.Gem2,
+            Belt.Gem2,
+        };
+
+        foreach (var concentrationGem in concentrationGems.Where(gem => gem.GemLevel != ConcentrationStoneLevel.None && gem.StatType.HasValue))
+        {
+            var statType = concentrationGem.StatType!.Value;
+            var value = StatNumberProvider.GetConcentrationStoneMultiplier(concentrationGem.GemLevel);
+            if (!multipliers.TryGetValue(statType, out _))
+                multipliers[statType] = value;
+            else
+                multipliers[statType] += value;
+        }
+
         return multipliers;
     }
 

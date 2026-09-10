@@ -5,28 +5,32 @@ namespace Models.BaseModels;
 
 public class Gem
 {
-    public Gem(StatType statType, GemLevel gemLevel)
+    public Gem(StatType? statType, PowerStoneLevel gemLevel)
     {
         GemLevel = gemLevel;
-        Stat = new Stat(statType, StatNumberProvider.GetGemStatNumber(statType, gemLevel));
+        StatType = statType;
+        Stat = statType.HasValue
+            ? new Stat(statType.Value, StatNumberProvider.GetGemStatNumber(statType.Value, gemLevel))
+            : null;
         PotentialStats = GetPotentialStats(gemLevel);
     }
 
-    public Stat Stat { get; }
-    public GemLevel GemLevel { get; }
+    public StatType? StatType { get; }
+    public Stat? Stat { get; }
+    public PowerStoneLevel GemLevel { get; }
     public Stat[] PotentialStats { get; }
 
-    public Gem CreateFromInstance(Stat? newStat = null, GemLevel? newGemLevel = null)
+    public Gem CreateFromInstance(Stat? newStat = null, PowerStoneLevel? newGemLevel = null)
     {
         return new Gem(
-            newStat?.StatType ?? Stat.StatType,
+            newStat?.StatType ?? StatType,
             newGemLevel ?? GemLevel);
     }
 
-    private static Stat[] GetPotentialStats(GemLevel gemLevel)
+    private static Stat[] GetPotentialStats(PowerStoneLevel gemLevel)
     {
-        return Enum.GetValues<StatType>()
-            .Where(statType => statType != StatType.CharacterSpeed)
+        return Enum.GetValues<Models.Stats.StatType>()
+            .Where(statType => statType != Models.Stats.StatType.CharacterSpeed)
             .Select(statType => new Stat(statType, StatNumberProvider.GetGemStatNumber(statType, gemLevel)))
             .ToArray();
     }

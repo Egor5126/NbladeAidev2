@@ -14,7 +14,7 @@ public class Belt : ArmorBase
         CharacterClass characterClass,
         StuffRuneOfImprovementLevel runeOfImprovementLevel,
         Gem gem1,
-        Gem gem2)
+        ConcentrationGem gem2)
         : base(statCombination, characterClass, ArmorType.Belt, runeOfImprovementLevel, gem1, gem2)
     {
     }

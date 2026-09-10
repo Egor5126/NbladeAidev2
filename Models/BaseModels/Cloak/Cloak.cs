@@ -9,7 +9,7 @@ public class Cloak
     public Cloak() : this(
         StatCombination.GetRandomStatCombination(),
         StuffRarity.Orange,
-        StuffRuneOfImprovementLevel.Level12) {}
+        StuffRuneOfImprovementLevel.Level10) {}
 
     public Cloak(
         StatCombination statCombination,

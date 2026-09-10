@@ -1,5 +1,7 @@
 @using Models.BaseModels
 @using Models.BaseModels.Armors
+@using Models.Extensions
+@using Models.Multipliers
 @using Models.Names
 @using Models.Stats
 
@@ -21,10 +23,10 @@
         }
     </MudItem>
     <MudItem xs="6">
-        <MudText Typo="Typo.body1">Камень (@GemNamesProvider.GetGemLevelName(Armor.Gem1.GemLevel))</MudText>
+        <MudText Typo="Typo.body1">Камень силы (@GemNamesProvider.GetGemLevelName(Armor.Gem1.GemLevel))</MudText>
         <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@GetGemStatDescription(Armor.Gem1)</MudText>
-        <MudText Typo="Typo.body1">Камень (@GemNamesProvider.GetGemLevelName(Armor.Gem2.GemLevel))</MudText>
-        <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@GetGemStatDescription(Armor.Gem2)</MudText>
+        <MudText Typo="Typo.body1">Камень концентрации (@GemNamesProvider.GetConcentrationStoneLevelName(Armor.Gem2.GemLevel))</MudText>
+        <MudText Typo="Typo.body1" Style="@($"color:{Colors.Green.Darken1};")">@GetConcentrationGemStatDescription(Armor.Gem2)</MudText>
     </MudItem>
 </MudGrid>
 
@@ -34,8 +36,15 @@
 
     private string GetGemStatDescription(Gem gem)
     {
-        return gem.GemLevel == GemLevel.None
+        return gem.GemLevel == PowerStoneLevel.None || gem.Stat == null
             ? "нет характеристики"
             : gem.Stat.ToString();
+    }
+
+    private string GetConcentrationGemStatDescription(ConcentrationGem gem)
+    {
+        return gem.GemLevel == ConcentrationStoneLevel.None || !gem.StatType.HasValue
+            ? "нет характеристики"
+            : $"{StatNamesProvider.GetStatName(gem.StatType.Value)}: {StatNumberProvider.GetConcentrationStoneMultiplier(gem.GemLevel).ToPercentString()}";
     }
 }

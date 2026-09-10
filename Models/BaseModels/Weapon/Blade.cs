@@ -6,9 +6,10 @@ public class Blade : WeaponBase
 {
     public Blade(CharacterClass characterClass, WeaponOrder weaponOrder)
         : this(
-            StatCombination.GetRandomStatCombination(),
+            // Вещи с 3 характеристиками отключены (кроме плаща) — новое оружие всегда создаётся с 4 характеристиками
+            StatCombination.GetRandomStatCombination(StatCombinationType.FourStats),
             characterClass,
-            StuffRuneOfImprovementLevel.Level12,
+            StuffRuneOfImprovementLevel.Level10,
             weaponOrder,
             null)
     {

@@ -1,0 +1,65 @@
+@using Models.BaseModels
+@using Models.Names
+@using Models.Stats
+
+<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Камень концентрации</MudText>
+
+<MudSelect
+    T="ConcentrationStoneLevel"
+    Label="Выберите уровень камня"
+    Value="@ConcentrationGem.GemLevel"
+    ToStringFunc="@GemNamesProvider.GetConcentrationStoneLevelName"
+    ValueChanged="UpdateGemLevel">
+
+    @foreach (var level in Enum.GetValues(typeof(ConcentrationStoneLevel)).Cast<ConcentrationStoneLevel>())
+    {
+        <MudSelectItem Value="@level"/>
+    }
+</MudSelect>
+
+<MudAutocomplete
+    T="StatType?"
+    Label="Выберите характеристику камня"
+    Value="@ConcentrationGem.StatType"
+    SearchFunc="@SearchPotentialStats"
+    ValueChanged="UpdateGemStat"
+    ToStringFunc="@(statType => statType.HasValue ? StatNamesProvider.GetStatName(statType.Value) : string.Empty)"
+    MaxItems="null"
+    Clearable="true"
+    Disabled="@(ConcentrationGem.GemLevel == ConcentrationStoneLevel.None)"/>
+
+@code {
+    [Parameter]
+    public ConcentrationGem ConcentrationGem { get; set; }
+
+    [Parameter]
+    public EventCallback<ConcentrationGem> ConcentrationGemChanged { get; set; }
+
+    private async Task UpdateGemLevel(ConcentrationStoneLevel gemLevel)
+    {
+        ConcentrationGem = ConcentrationGem.CreateFromInstance(newGemLevel: gemLevel);
+        await ConcentrationGemChanged.InvokeAsync(ConcentrationGem);
+    }
+
+    private async Task UpdateGemStat(StatType? statType)
+    {
+        if (!statType.HasValue)
+            return;
+
+        ConcentrationGem = ConcentrationGem.CreateFromInstance(statType: statType.Value);
+        await ConcentrationGemChanged.InvokeAsync(ConcentrationGem);
+    }
+
+    private Task<IEnumerable<StatType?>> SearchPotentialStats(string value)
+    {
+        var states = Enum.GetValues<StatType>()
+            .Where(statType => statType != StatType.CharacterSpeed)
+            .Select(statType => (StatType?)statType);
+
+        return Task.FromResult(string.IsNullOrEmpty(value)
+            ? states
+            : states
+                .Where(x => StatNamesProvider.GetStatName(x!.Value)
+                .Contains(value, StringComparison.InvariantCultureIgnoreCase)));
+    }
+}

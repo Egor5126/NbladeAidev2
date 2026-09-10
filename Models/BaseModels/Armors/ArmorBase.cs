@@ -7,12 +7,13 @@ namespace Models.BaseModels.Armors;
 public abstract class ArmorBase
 {
     protected ArmorBase(CharacterClass characterClass, ArmorType armorType) : this(
-        StatCombination.GetRandomStatCombination(),
+        // Вещи с 3 характеристиками отключены (кроме плаща) — новая броня всегда создаётся с 4 характеристиками
+        StatCombination.GetRandomStatCombination(StatCombinationType.FourStats),
         characterClass,
         armorType,
-        StuffRuneOfImprovementLevel.Level12,
-        new Gem(StatType.Accuracy, GemLevel.None),
-        new Gem(StatType.AttackPower, GemLevel.None))
+        StuffRuneOfImprovementLevel.Level10,
+        new Gem(null, PowerStoneLevel.None),
+        new ConcentrationGem(null, ConcentrationStoneLevel.None))
     {
     }
 
@@ -22,7 +23,7 @@ public abstract class ArmorBase
         ArmorType armorType,
         StuffRuneOfImprovementLevel runeOfImprovementLevel,
         Gem gem1,
-        Gem gem2)
+        ConcentrationGem gem2)
     {
         var whiteStats = StatNumberProvider.GetWhiteStatArmorNumbers(characterClass);
         var whiteArmorMultiplier = BaseStuffStatsMultiplier.GetArmorWhiteStatMultiplier(armorType);
@@ -58,7 +59,7 @@ public abstract class ArmorBase
     public string Name { get; private set; }
     public string SimpleName { get; set; }
     public Gem Gem1 { get; set; }
-    public Gem Gem2 { get; set; }
+    public ConcentrationGem Gem2 { get; set; }
     public StatCombination[] PotentialStatCombinations { get; }
 
     public abstract ArmorBase CreateFromInstance(
@@ -71,9 +72,10 @@ public abstract class ArmorBase
         double greenMultiplier, 
         double runeMultiplier)
     {
-        var statCombinations = statCombinationType == StatCombinationType.ThreeStats 
+        // Вещи с 3 характеристиками отключены (кроме плаща) — оставляем только вариант с 4 характеристиками
+        var statCombinations = /*statCombinationType == StatCombinationType.ThreeStats
             ? StatCombinationsList.ThreeStatCombinations()
-            : StatCombinationsList.FourStateCombinations();
+            : */StatCombinationsList.FourStateCombinations();
         foreach (var statCombination in statCombinations)
         {
             statCombination
@@ -104,7 +106,7 @@ public abstract class ArmorBase
 
     public Stat[] GetNonMultipliedStats()
     {
-        return new[] { Gem1.Stat, Gem2.Stat };
+        return Gem1.Stat != null ? new[] { Gem1.Stat } : Array.Empty<Stat>();
     }
 
     public void UpdateStatCombination(StatCombination newStatCombination)

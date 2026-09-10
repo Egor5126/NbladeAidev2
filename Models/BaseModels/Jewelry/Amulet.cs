@@ -5,9 +5,10 @@ namespace Models.BaseModels.Jewelry;
 public class Amulet : JewelryBase
 {
     public Amulet() : this(
-        StatCombination.GetRandomStatCombination(),
+        // Вещи с 3 характеристиками отключены (кроме плаща) — новая бижутерия всегда создаётся с 4 характеристиками
+        StatCombination.GetRandomStatCombination(StatCombinationType.FourStats),
         StuffRarity.Orange,
-        JewelryRuneOfImprovementLevel.Level12)
+        JewelryRuneOfImprovementLevel.Level10)
     {
     }
 

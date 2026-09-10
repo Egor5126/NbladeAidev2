@@ -14,7 +14,7 @@ public class ShoulderPad : ArmorBase
         CharacterClass characterClass,
         StuffRuneOfImprovementLevel runeOfImprovementLevel,
         Gem gem1,
-        Gem gem2)
+        ConcentrationGem gem2)
         : base(statCombination, characterClass, ArmorType.ShoulderPad, runeOfImprovementLevel, gem1, gem2)
     {
     }

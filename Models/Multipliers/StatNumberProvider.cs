@@ -15,9 +15,9 @@ public static class StatNumberProvider
         };
     }
 
-    public static int GetGemStatNumber(StatType statType, GemLevel gemLevel)
+    public static int GetGemStatNumber(StatType statType, PowerStoneLevel gemLevel)
     {
-        return GemStatNumber(statType, gemLevel);
+        return PowerStoneStatNumber(statType, gemLevel);
     }
 
     public static double GetWeaponGemMultiplier(GemLevel gemLevel)
@@ -30,6 +30,17 @@ public static class StatNumberProvider
             GemLevel.Level3 => 0.035,
             GemLevel.Level4 => 0.049,
             GemLevel.Level5 => 0.07,
+            _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
+        };
+    }
+
+    public static double GetConcentrationStoneMultiplier(ConcentrationStoneLevel gemLevel)
+    {
+        return gemLevel switch
+        {
+            ConcentrationStoneLevel.None => 0,
+            ConcentrationStoneLevel.Level6 => 0.0217,
+            ConcentrationStoneLevel.Level10 => 0.05,
             _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
         };
     }
@@ -125,160 +136,116 @@ public static class StatNumberProvider
         };
     }
 
-    private static int GemStatNumber(StatType statType, GemLevel gemLevel)
+    private static int PowerStoneStatNumber(StatType statType, PowerStoneLevel gemLevel)
     {
         return statType switch
         {
             StatType.AttackPower => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 104,
-                GemLevel.Level2 => 146,
-                GemLevel.Level3 => 209,
-                GemLevel.Level4 => 292,
-                GemLevel.Level5 => 417,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 180,
+                PowerStoneLevel.Level10 => 418,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.AttackSpeed => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 116,
-                GemLevel.Level2 => 162,
-                GemLevel.Level3 => 232,
-                GemLevel.Level4 => 325,
-                GemLevel.Level5 => 464,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 215,
+                PowerStoneLevel.Level10 => 464,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Accuracy => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 116,
-                GemLevel.Level2 => 162,
-                GemLevel.Level3 => 232,
-                GemLevel.Level4 => 325,
-                GemLevel.Level5 => 464,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 215,
+                PowerStoneLevel.Level10 => 464,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.CriticalDamage => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 116,
-                GemLevel.Level2 => 162,
-                GemLevel.Level3 => 232,
-                GemLevel.Level4 => 325,
-                GemLevel.Level5 => 464,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 215,
+                PowerStoneLevel.Level10 => 464,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Armor => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 1246,
-                GemLevel.Level2 => 1745,
-                GemLevel.Level3 => 2463,
-                GemLevel.Level4 => 3490,
-                GemLevel.Level5 => 4985,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 2160,
+                PowerStoneLevel.Level10 => 4986,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.MagicArmor => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 1246,
-                GemLevel.Level2 => 1745,
-                GemLevel.Level3 => 2463,
-                GemLevel.Level4 => 3490,
-                GemLevel.Level5 => 4985,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 2160,
+                PowerStoneLevel.Level10 => 4986,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.MagicalResistance => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 301,
-                GemLevel.Level2 => 422,
-                GemLevel.Level3 => 603,
-                GemLevel.Level4 => 844,
-                GemLevel.Level5 => 1206,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 520,
+                PowerStoneLevel.Level10 => 1206,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.CriticalDamageResistance => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 116,
-                GemLevel.Level2 => 162,
-                GemLevel.Level3 => 232,
-                GemLevel.Level4 => 325,
-                GemLevel.Level5 => 464,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 215,
+                PowerStoneLevel.Level10 => 464,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Evasion => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 301,
-                GemLevel.Level2 => 422,
-                GemLevel.Level3 => 603,
-                GemLevel.Level4 => 844,
-                GemLevel.Level5 => 1206,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 520,
+                PowerStoneLevel.Level10 => 1206,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Block => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 116,
-                GemLevel.Level2 => 162,
-                GemLevel.Level3 => 232,
-                GemLevel.Level4 => 325,
-                GemLevel.Level5 => 464,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 215,
+                PowerStoneLevel.Level10 => 464,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Parry => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 301,
-                GemLevel.Level2 => 422,
-                GemLevel.Level3 => 603,
-                GemLevel.Level4 => 844,
-                GemLevel.Level5 => 1206,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 520,
+                PowerStoneLevel.Level10 => 1206,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Health => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 580,
-                GemLevel.Level2 => 812,
-                GemLevel.Level3 => 1159,
-                GemLevel.Level4 => 1623,
-                GemLevel.Level5 => 2319,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 1005,
+                PowerStoneLevel.Level10 => 2320,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.HealthRestoration => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 133,
-                GemLevel.Level2 => 187,
-                GemLevel.Level3 => 267,
-                GemLevel.Level4 => 373,
-                GemLevel.Level5 => 533,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 230,
+                PowerStoneLevel.Level10 => 534,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Energy => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 348,
-                GemLevel.Level2 => 487,
-                GemLevel.Level3 => 696,
-                GemLevel.Level4 => 974,
-                GemLevel.Level5 => 1391,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 605,
+                PowerStoneLevel.Level10 => 1392,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.EnergyRestoration => gemLevel switch
             {
-                GemLevel.None => 0,
-                GemLevel.Level1 => 47,
-                GemLevel.Level2 => 65,
-                GemLevel.Level3 => 93,
-                GemLevel.Level4 => 131,
-                GemLevel.Level5 => 187,
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 81,
+                PowerStoneLevel.Level10 => 188,
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
+            StatType.CharacterSpeed => 0,
             _ => throw new ArgumentOutOfRangeException(nameof(statType), statType, null)
         };
     }

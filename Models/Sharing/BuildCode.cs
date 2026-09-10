@@ -171,9 +171,9 @@ public static class BuildCode
         parts.Add((int)armor.StatCombination.StatCombinationType);
         parts.Add(GetCombinationIndex(armor.StatCombination));
         parts.Add((int)armor.RuneOfImprovementLevel);
-        parts.Add((int)armor.Gem1.Stat.StatType);
+        parts.Add(armor.Gem1.StatType.HasValue ? (int)armor.Gem1.StatType.Value : -1);
         parts.Add((int)armor.Gem1.GemLevel);
-        parts.Add((int)armor.Gem2.Stat.StatType);
+        parts.Add(armor.Gem2.StatType.HasValue ? (int)armor.Gem2.StatType.Value : -1);
         parts.Add((int)armor.Gem2.GemLevel);
     }
 
@@ -181,14 +181,17 @@ public static class BuildCode
     {
         var combination = ReadCombination(cursor);
         var runeLevel = (StuffRuneOfImprovementLevel)cursor.Next();
-        var gem1StatType = (StatType)cursor.Next();
-        var gem1Level = (GemLevel)cursor.Next();
-        var gem2StatType = (StatType)cursor.Next();
-        var gem2Level = (GemLevel)cursor.Next();
+        var gem1StatTypeRaw = cursor.Next();
+        var gem1Level = (PowerStoneLevel)cursor.Next();
+        var gem2StatTypeRaw = cursor.Next();
+        var gem2Level = (ConcentrationStoneLevel)cursor.Next();
+
+        StatType? gem1StatType = gem1StatTypeRaw == -1 ? null : (StatType)gem1StatTypeRaw;
+        StatType? gem2StatType = gem2StatTypeRaw == -1 ? null : (StatType)gem2StatTypeRaw;
 
         var result = current.CreateFromInstance(combination, runeLevel);
         result.Gem1 = new Gem(gem1StatType, gem1Level);
-        result.Gem2 = new Gem(gem2StatType, gem2Level);
+        result.Gem2 = new ConcentrationGem(gem2StatType, gem2Level);
         return result;
     }
 
