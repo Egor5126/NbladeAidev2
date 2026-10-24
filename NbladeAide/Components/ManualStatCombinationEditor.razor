@@ -1,11 +1,12 @@
+@using Models.Multipliers
 @using Models.Names
 @using Models.Stats
 
 @for (var i = 0; i < SlotCount; i++)
 {
     var index = i;
-    <MudGrid Class="mb-1">
-        <MudItem xs="7">
+    <MudGrid Class="mb-2">
+        <MudItem xs="12">
             <MudAutocomplete T="StatType?"
                              Label="@($"Характеристика {index + 1}")"
                              Value="@_slots[index].StatType"
@@ -15,10 +16,28 @@
                              MaxItems="null"
                              Clearable="true" />
         </MudItem>
-        <MudItem xs="5">
+        <MudItem xs="4">
             <MudNumericField T="int"
-                             Label="Значение"
+                             Label="Мин"
+                             Value="@_slots[index].Min"
+                             Variant="Variant.Outlined"
+                             Disabled="@(!_slots[index].StatType.HasValue)"
+                             ValueChanged="@(newMin => UpdateSlotMin(index, newMin))" />
+        </MudItem>
+        <MudItem xs="4">
+            <MudNumericField T="int"
+                             Label="Макс"
+                             Value="@_slots[index].Max"
+                             Variant="Variant.Outlined"
+                             Disabled="@(!_slots[index].StatType.HasValue)"
+                             ValueChanged="@(newMax => UpdateSlotMax(index, newMax))" />
+        </MudItem>
+        <MudItem xs="4">
+            <MudNumericField T="int"
+                             Label="Значение на вещи"
                              Value="@_slots[index].Value"
+                             Min="@_slots[index].Min"
+                             Max="@_slots[index].Max"
                              Variant="Variant.Outlined"
                              Disabled="@(!_slots[index].StatType.HasValue)"
                              ValueChanged="@(newValue => UpdateSlotValue(index, newValue))" />
@@ -36,7 +55,12 @@
     [Parameter]
     public int SlotCount { get; set; } = 4;
 
-    private (StatType? StatType, int Value)[] _slots = Array.Empty<(StatType?, int)>();
+    // Общий множитель вещи (зелёный × редкость × руна). Если больше 0, то при выборе
+    // характеристики мин/макс/значение подставляются автоматически; их по-прежнему можно менять.
+    [Parameter]
+    public double ScaleMultiplier { get; set; }
+
+    private (StatType? StatType, int Min, int Max, int Value)[] _slots = Array.Empty<(StatType?, int, int, int)>();
     private StatCombination? _lastSyncedCombination;
 
     protected override void OnParametersSet()
@@ -45,10 +69,20 @@
         {
             _lastSyncedCombination = StatCombination;
             var stats = StatCombination.Stats;
-            var slots = new (StatType? StatType, int Value)[SlotCount];
+            var custom = StatCombination as CustomStatCombination;
+            var slots = new (StatType? StatType, int Min, int Max, int Value)[SlotCount];
             for (var i = 0; i < SlotCount; i++)
             {
-                slots[i] = i < stats.Length ? (stats[i].StatType, stats[i].StatNumber) : (null, 0);
+                if (i < stats.Length)
+                {
+                    var min = custom?.GetMin(i) ?? stats[i].StatNumber;
+                    var max = custom?.GetMax(i) ?? stats[i].StatNumber;
+                    slots[i] = (stats[i].StatType, min, max, stats[i].StatNumber);
+                }
+                else
+                {
+                    slots[i] = (null, 0, 0, 0);
+                }
             }
             _slots = slots;
         }
@@ -69,13 +103,47 @@
 
     private async Task UpdateSlotType(int index, StatType? newType)
     {
-        _slots[index] = (newType, _slots[index].Value);
+        if (!newType.HasValue)
+        {
+            _slots[index] = (null, 0, 0, 0);
+        }
+        else if (ScaleMultiplier > 0)
+        {
+            var range = StatRangeProvider.GetRange(newType.Value, ScaleMultiplier);
+            _slots[index] = (newType, range.Min, range.Max, range.Value);
+        }
+        else
+        {
+            var slot = _slots[index];
+            _slots[index] = (newType, slot.Min, slot.Max, slot.Value);
+        }
+
+        await CommitAsync();
+    }
+
+    private async Task UpdateSlotMin(int index, int newMin)
+    {
+        var slot = _slots[index];
+        var newMax = Math.Max(slot.Max, newMin);
+        var newValue = Math.Clamp(slot.Value, newMin, newMax);
+        _slots[index] = (slot.StatType, newMin, newMax, newValue);
+        await CommitAsync();
+    }
+
+    private async Task UpdateSlotMax(int index, int newMax)
+    {
+        var slot = _slots[index];
+        var newMin = Math.Min(slot.Min, newMax);
+        var newValue = Math.Clamp(slot.Value, newMin, newMax);
+        _slots[index] = (slot.StatType, newMin, newMax, newValue);
         await CommitAsync();
     }
 
     private async Task UpdateSlotValue(int index, int newValue)
     {
-        _slots[index] = (_slots[index].StatType, newValue);
+        var slot = _slots[index];
+        var clamped = Math.Clamp(newValue, slot.Min, slot.Max);
+        _slots[index] = (slot.StatType, slot.Min, slot.Max, clamped);
         await CommitAsync();
     }
 
@@ -83,7 +151,7 @@
     {
         var stats = _slots
             .Where(s => s.StatType.HasValue)
-            .Select(s => new Stat(s.StatType!.Value, s.Value))
+            .Select(s => (s.StatType!.Value, s.Min, s.Max, s.Value))
             .ToArray();
 
         StatCombination newCombination = stats.Length == 0

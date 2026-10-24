@@ -261,14 +261,16 @@ public static class BuildCode
     {
         parts.Add((int)combination.StatCombinationType);
 
-        if (combination is CustomStatCombination)
+        if (combination is CustomStatCombination custom)
         {
             parts.Add(-2);
             parts.Add(combination.Stats.Length);
-            foreach (var stat in combination.Stats)
+            for (var i = 0; i < combination.Stats.Length; i++)
             {
-                parts.Add((int)stat.StatType);
-                parts.Add(stat.StatNumber);
+                parts.Add((int)combination.Stats[i].StatType);
+                parts.Add(custom.GetMin(i));
+                parts.Add(custom.GetMax(i));
+                parts.Add(combination.Stats[i].StatNumber);
             }
             return;
         }
@@ -285,16 +287,19 @@ public static class BuildCode
         if (index == -1)
             return EmptyStatCombination.For(type);
 
-        // -2 значит, что комбинация собрана игроком вручную — читаем её статы и значения целиком.
+        // -2 значит, что комбинация собрана игроком вручную — читаем её статы,
+        // диапазоны и текущие значения целиком.
         if (index == -2)
         {
             var count = cursor.Next();
-            var stats = new Stat[count];
+            var stats = new (StatType StatType, int Min, int Max, int Value)[count];
             for (var i = 0; i < count; i++)
             {
                 var statType = (StatType)cursor.Next();
-                var statNumber = cursor.Next();
-                stats[i] = new Stat(statType, statNumber);
+                var min = cursor.Next();
+                var max = cursor.Next();
+                var value = cursor.Next();
+                stats[i] = (statType, min, max, value);
             }
             return new CustomStatCombination(type, stats);
         }

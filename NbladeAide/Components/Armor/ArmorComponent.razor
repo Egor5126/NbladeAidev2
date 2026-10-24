@@ -1,5 +1,6 @@
 @using Models.Stats
 @using Models.BaseModels
+@using Models.Multipliers
 @using Models.Providers
 @using Models.Names
 
@@ -12,7 +13,9 @@
 
 @* Выбор готовой комбинации из списка временно скрыт — характеристики теперь выбираются вручную ниже *@
 
-<ManualStatCombinationEditor StatCombination="Armor.StatCombination" StatCombinationChanged="UpdateStatCombination" />
+<ManualStatCombinationEditor StatCombination="Armor.StatCombination"
+                             StatCombinationChanged="UpdateStatCombination"
+                             ScaleMultiplier="@StatScale" />
 
 <MudSelect
     T="StuffRuneOfImprovementLevel"
@@ -38,6 +41,11 @@
 
     [Parameter]
     public EventCallback<TArmor> ArmorChanged { get; set; }
+
+    // Общий множитель брони: множитель типа брони × руна улучшения — как в ArmorBase.
+    private double StatScale =>
+        BaseStuffStatsMultiplier.GetArmorGreenStatMultiplier(Armor.ArmorType)
+        * StuffRuneOfImprovementMultiplier.RuneMultiplier(Armor.RuneOfImprovementLevel);
 
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {

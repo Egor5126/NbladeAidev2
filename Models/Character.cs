@@ -89,7 +89,11 @@ public class Character
             .Select(statType => new KeyValuePair<StatType, int>(statType, 0));
         var finalStats = new Dictionary<StatType, int>(initStatTypes);
         var multipliedStats = GetMultipliedStats();
-        var nonMultipliedStats = GetNonMultipliedStats();
+        var nonMultipliedStats = GetNonMultipliedStats().ToArray();
+
+        // Значения статов до применения эликсиров. Проценты камней (концентрации и оружейных)
+        // считаются именно от них, чтобы эликсир не увеличивал бонус от камней.
+        var statsBeforeElixirs = new List<Stat>();
 
         foreach (var multipliedStat in multipliedStats)
         {
@@ -103,6 +107,8 @@ public class Character
                     .First(stat => stat.StatType == multipliedStat.StatType).BaseMultiplier;
                 multipliedStat.UseMultiplier(multiplier);
             }
+
+            statsBeforeElixirs.Add(new Stat(multipliedStat.StatType, multipliedStat.StatNumber));
 
             UseElixirMultiplier(AttackElixir, multipliedStat);
             UseElixirMultiplier(DefenseElixir, multipliedStat);
@@ -125,9 +131,16 @@ public class Character
                 allMultipliers[multiplier.Key] += multiplier.Value;
         }
 
+        // Камни дают прибавку в процентах от значения стата без эликсиров; эликсир на этот бонус не влияет.
+        var totalsBeforeElixirs = statsBeforeElixirs
+            .Concat(nonMultipliedStats)
+            .GroupBy(stat => stat.StatType)
+            .ToDictionary(group => group.Key, group => group.Sum(stat => stat.StatNumber));
+
         foreach (var multiplier in allMultipliers)
         {
-            finalStats[multiplier.Key] = (int)Math.Floor(finalStats[multiplier.Key] * (multiplier.Value + 1));
+            var totalBeforeElixirs = totalsBeforeElixirs.TryGetValue(multiplier.Key, out var total) ? total : 0;
+            finalStats[multiplier.Key] += (int)Math.Floor(totalBeforeElixirs * multiplier.Value);
         }
 
         return finalStats;

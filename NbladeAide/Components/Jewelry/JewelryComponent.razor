@@ -2,6 +2,7 @@
 @using Models.BaseModels
 @using Models.Names
 @using Models.BaseModels.Jewelry
+@using Models.Multipliers
 @using Models.Providers
 
 @typeparam TJewelry where TJewelry : JewelryBase
@@ -13,7 +14,9 @@
 
 @* Выбор готовой комбинации из списка временно скрыт — характеристики теперь выбираются вручную ниже *@
 
-<ManualStatCombinationEditor StatCombination="Jewelry.StatCombination" StatCombinationChanged="UpdateStatCombination" />
+<ManualStatCombinationEditor StatCombination="Jewelry.StatCombination"
+                             StatCombinationChanged="UpdateStatCombination"
+                             ScaleMultiplier="@StatScale" />
 
 <MudSelect
     T="JewelryRuneOfImprovementLevel"
@@ -50,6 +53,12 @@
 
     [Parameter]
     public EventCallback<TJewelry> JewelryChanged { get; set; }
+
+    // Общий множитель бижутерии: зелёный × редкость × руна улучшения — как в JewelryBase.
+    private double StatScale =>
+        BaseStuffStatsMultiplier.GetJewelryGreenStatMultiplier()
+        * BaseStuffStatsMultiplier.GetStuffRarityMultiplier(Jewelry.StuffRarity)
+        * JewelryRuneOfImprovementMultiplier.RuneMultiplier(Jewelry.JewelryRuneOfImprovementLevel);
 
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {
