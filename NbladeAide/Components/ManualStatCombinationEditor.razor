@@ -109,9 +109,12 @@
     {
         // Игра допускает до 4 одинаковых характеристик на одной вещи — не исключаем
         // типы, уже выбранные в других полях.
+        // Порядок в списке: «Критический урон» стоит сразу после «Шанс крит. урона».
+        // Числа в enum не трогаем (они зашиты в ссылки на билды) — меняем только порядок показа.
         var allTypes = Enum.GetValues<StatType>()
-            .Where(t => t != StatType.CharacterSpeed)
-            .ToArray();
+            .Where(t => t != StatType.CharacterSpeed && t != StatType.CriticalDamage)
+            .ToList();
+        allTypes.Insert(allTypes.IndexOf(StatType.CriticalChance) + 1, StatType.CriticalDamage);
 
         // Когда характеристика уже выбрана, в поле стоит её название, и при повторном открытии списка
         // оно приходит сюда как строка поиска. Если оно целиком совпадает с названием стата —

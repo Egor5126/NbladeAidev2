@@ -588,3 +588,23 @@ html, body, .mud-typography, .mud-input, .mud-button-root {
     overflow: hidden;
     background: var(--nb-divider);
 }
+
+/* Узкие экраны: подпись поля характеристики не должна сжиматься до нескольких пикселей —
+   поле типа занимает всю строку, значение уходит под него. */
+@media (max-width: 600px) {
+    .nb-slot-top {
+        flex-wrap: wrap;
+    }
+
+    .nb-slot-type {
+        flex: 1 1 100%;
+    }
+
+    .nb-slot-value {
+        flex: 1 1 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+}

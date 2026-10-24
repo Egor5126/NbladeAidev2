@@ -2,11 +2,10 @@
 
 <MudDialog>
     <TitleContent>
-        <div class="nb-eyebrow">@Cloak.SimpleName</div>
-        <div class="nb-dialog-name" style="color:@UiText.RarityColor(Cloak.StuffRarity)">@Cloak.Name</div>
+        <DialogHeader @ref="_header" Source="@(() => (Cloak.SimpleName, Cloak.Name, UiText.RarityColor(Cloak.StuffRarity)))" />
     </TitleContent>
     <DialogContent>
-        <CloakComponent @bind-Cloak="Cloak"/>
+        <CloakComponent Cloak="Cloak" CloakChanged="OnCloakChanged"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Отмена</MudButton>
@@ -20,6 +19,14 @@
 
     [Parameter]
     public Cloak Cloak { get; set; }
+
+    private DialogHeader? _header;
+
+    private void OnCloakChanged(Cloak cloak)
+    {
+        Cloak = cloak;
+        _header?.Refresh();
+    }
 
     private void Submit()
     {

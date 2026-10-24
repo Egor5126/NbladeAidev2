@@ -1,0 +1,14 @@
+@* Заголовок диалога редактирования вещи.
+   MudDialog рисует TitleContent сам и не перерисовывает его, когда меняется родитель,
+   поэтому заголовок — отдельный компонент: диалог вызывает Refresh() после каждой правки вещи. *@
+<div class="nb-eyebrow">@Current.Eyebrow</div>
+<div class="nb-dialog-name" style="color:@Current.Color">@Current.Name</div>
+
+@code {
+    [Parameter]
+    public Func<(string Eyebrow, string Name, string Color)> Source { get; set; } = () => (string.Empty, string.Empty, UiText.Violet);
+
+    private (string Eyebrow, string Name, string Color) Current => Source();
+
+    public void Refresh() => StateHasChanged();
+}

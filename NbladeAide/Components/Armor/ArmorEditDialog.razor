@@ -4,11 +4,10 @@
 
 <MudDialog>
     <TitleContent>
-        <div class="nb-eyebrow">@_draft.SimpleName</div>
-        <div class="nb-dialog-name" style="color:@UiText.Violet">@_draft.Name</div>
+        <DialogHeader @ref="_header" Source="@(() => (_draft.SimpleName, _draft.Name, UiText.Violet))" />
     </TitleContent>
     <DialogContent>
-        <ArmorComponent @bind-Armor="_draft" TArmor="TArmor"/>
+        <ArmorComponent Armor="_draft" ArmorChanged="OnDraftChanged" TArmor="TArmor"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Отмена</MudButton>
@@ -26,10 +25,17 @@
     // Правим копию вещи: оригинал в персонаже подменяется только по кнопке «Сохранить»,
     // поэтому «Отмена» (и закрытие крестиком/Esc) ничего не меняет.
     private TArmor _draft = null!;
+    private DialogHeader? _header;
 
     protected override void OnInitialized()
     {
         _draft = (TArmor)Armor.CreateFromInstance();
+    }
+
+    private void OnDraftChanged(TArmor draft)
+    {
+        _draft = draft;
+        _header?.Refresh();
     }
 
     private void Submit()

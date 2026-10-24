@@ -4,11 +4,10 @@
 
 <MudDialog>
     <TitleContent>
-        <div class="nb-eyebrow">@Jewelry.SimpleName</div>
-        <div class="nb-dialog-name" style="color:@UiText.RarityColor(Jewelry.StuffRarity)">@Jewelry.Name</div>
+        <DialogHeader @ref="_header" Source="@(() => (Jewelry.SimpleName, Jewelry.Name, UiText.RarityColor(Jewelry.StuffRarity)))" />
     </TitleContent>
     <DialogContent>
-        <JewelryComponent @bind-Jewelry="Jewelry" TJewelry="TJewelry"/>
+        <JewelryComponent Jewelry="Jewelry" JewelryChanged="OnJewelryChanged" TJewelry="TJewelry"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Отмена</MudButton>
@@ -22,6 +21,14 @@
 
     [Parameter]
     public TJewelry Jewelry { get; set; }
+
+    private DialogHeader? _header;
+
+    private void OnJewelryChanged(TJewelry jewelry)
+    {
+        Jewelry = jewelry;
+        _header?.Refresh();
+    }
 
     private void Submit()
     {
