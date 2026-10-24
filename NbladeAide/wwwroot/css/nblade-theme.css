@@ -119,7 +119,7 @@ html, body, .mud-typography, .mud-input, .mud-button-root {
     text-align: left;
     background: var(--nb-surface);
     border: 1px solid var(--nb-border);
-    border-top: 3px solid var(--nb-violet);
+    border-left: 4px solid var(--nb-violet);
     border-radius: 10px;
     padding: 14px 16px;
     color: var(--nb-text);
@@ -131,7 +131,6 @@ html, body, .mud-typography, .mud-input, .mud-button-root {
 .nb-card:focus-visible {
     background: #19232F;
     border-color: var(--nb-ice);
-    border-top-color: inherit;
     outline: none;
 }
 
@@ -487,4 +486,105 @@ html, body, .mud-typography, .mud-input, .mud-button-root {
 .nb-seg--active {
     border-color: currentColor;
     font-weight: 600;
+}
+
+/* ===== Лист персонажа ===== */
+
+.nb-main > .nb-panel {
+    padding: 20px;
+}
+
+.nb-main .nb-section-title {
+    margin: 0 0 16px;
+    color: var(--nb-text);
+}
+
+.nb-cols {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.nb-col {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nb-subtitle {
+    margin: 20px 0 10px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--nb-ice);
+}
+
+.nb-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.nb-field {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.nb-amps {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+}
+
+.nb-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 10px 0 4px;
+    font-size: 12px;
+    color: var(--nb-muted);
+}
+
+.nb-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nb-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.nb-seg-base { background: #5B6B7B; }
+.nb-seg-gear { background: var(--nb-ice); }
+.nb-seg-gems { background: var(--nb-gold); }
+.nb-seg-boost { background: var(--nb-green); }
+
+.nb-stat {
+    padding: 8px 0;
+    border-top: 1px solid var(--nb-divider);
+}
+
+.nb-stat-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--nb-text-soft);
+}
+
+.nb-bar {
+    display: flex;
+    height: 6px;
+    margin-top: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--nb-divider);
 }

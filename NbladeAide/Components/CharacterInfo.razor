@@ -33,7 +33,36 @@
 
     <div class="nb-main">
 
-        <section>
+        <section class="nb-panel">
+            <h2 class="nb-section-title">Экипировка</h2>
+
+            <div class="nb-cols">
+                <div class="nb-col">
+                    <ArmorCompressedEditable @bind-Armor="Character.Helmet" TArmor="Helmet" />
+                    <ArmorCompressedEditable @bind-Armor="Character.ShoulderPad" TArmor="ShoulderPad" />
+                    <ArmorCompressedEditable @bind-Armor="Character.Cuirass" TArmor="Cuirass" />
+                    <ArmorCompressedEditable @bind-Armor="Character.Highway" TArmor="Highway" />
+                </div>
+                <div class="nb-col">
+                    <ArmorCompressedEditable @bind-Armor="Character.Gloves" TArmor="Gloves" />
+                    <ArmorCompressedEditable @bind-Armor="Character.Bracers" TArmor="Bracers" />
+                    <ArmorCompressedEditable @bind-Armor="Character.Belt" TArmor="Belt" />
+                    <ArmorCompressedEditable @bind-Armor="Character.Shoes" TArmor="Shoes" />
+                </div>
+            </div>
+
+            <h3 class="nb-subtitle">Бижутерия и плащ</h3>
+            <div class="nb-grid">
+                <JewelryCompressedEditable @bind-Jewelry="Character.Amulet1" TJewelry="Amulet" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Amulet2" TJewelry="Amulet" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Necklace" TJewelry="Necklace" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Ring1" TJewelry="Ring" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Ring2" TJewelry="Ring" />
+                <CloakCompressedEditable @bind-Cloak="Character.Cloak" />
+            </div>
+        </section>
+
+        <section class="nb-panel">
             <h2 class="nb-section-title">Оружие</h2>
             <div class="nb-grid nb-grid--wide">
                 <div>
@@ -78,29 +107,48 @@
             </div>
         </section>
 
-        <section>
-            <h2 class="nb-section-title">Броня</h2>
-            <div class="nb-grid">
-                <ArmorCompressedEditable @bind-Armor="Character.Cuirass" TArmor="Cuirass" />
-                <ArmorCompressedEditable @bind-Armor="Character.Highway" TArmor="Highway" />
-                <ArmorCompressedEditable @bind-Armor="Character.ShoulderPad" TArmor="ShoulderPad" />
-                <ArmorCompressedEditable @bind-Armor="Character.Helmet" TArmor="Helmet" />
-                <ArmorCompressedEditable @bind-Armor="Character.Shoes" TArmor="Shoes" />
-                <ArmorCompressedEditable @bind-Armor="Character.Gloves" TArmor="Gloves" />
-                <ArmorCompressedEditable @bind-Armor="Character.Bracers" TArmor="Bracers" />
-                <ArmorCompressedEditable @bind-Armor="Character.Belt" TArmor="Belt" />
-            </div>
-        </section>
+        <section class="nb-panel">
+            <h2 class="nb-section-title">Усиления</h2>
+            <div class="nb-fields">
+                <div class="nb-field">
+                    <MudSelect
+                        T="Elixir"
+                        Label="Атакующий эликсир"
+                        @bind-Value="@Character.AttackElixir"
+                        ToStringFunc="@(e => e.Name)"
+                        Variant="Variant.Outlined"
+                        Margin="Margin.Dense"
+                        Clearable>
 
-        <section>
-            <h2 class="nb-section-title">Бижутерия и плащ</h2>
-            <div class="nb-grid">
-                <JewelryCompressedEditable @bind-Jewelry="Character.Amulet1" TJewelry="Amulet" />
-                <JewelryCompressedEditable @bind-Jewelry="Character.Amulet2" TJewelry="Amulet" />
-                <JewelryCompressedEditable @bind-Jewelry="Character.Necklace" TJewelry="Necklace" />
-                <JewelryCompressedEditable @bind-Jewelry="Character.Ring1" TJewelry="Ring" />
-                <JewelryCompressedEditable @bind-Jewelry="Character.Ring2" TJewelry="Ring" />
-                <CloakCompressedEditable @bind-Cloak="Character.Cloak" />
+                        @foreach (var elixir in ElixirProvider.AttackElixirs)
+                        {
+                            <MudSelectItem Value="@elixir"/>
+                        }
+                    </MudSelect>
+                </div>
+                <div class="nb-field">
+                    <MudSelect
+                        T="Elixir"
+                        Label="Защитный эликсир"
+                        @bind-Value="@Character.DefenseElixir"
+                        ToStringFunc="@(e => e.Name)"
+                        Variant="Variant.Outlined"
+                        Margin="Margin.Dense"
+                        Clearable>
+
+                        @foreach (var elixir in ElixirProvider.DefenceElixirs)
+                        {
+                            <MudSelectItem Value="@elixir"/>
+                        }
+                    </MudSelect>
+                </div>
+            </div>
+            <div class="nb-amps">
+                @foreach (var availableAmplification in Character.AvailableAmplifications)
+                {
+                    <MudCheckBox @bind-Value="@availableAmplification.Used" Label="@availableAmplification.Name" Color="Color.Primary" Dense="true"></MudCheckBox>
+                    <MudText Typo="Typo.caption" Class="ml-8" Style="color: var(--nb-muted)">@availableAmplification.Description</MudText>
+                }
             </div>
         </section>
 
@@ -109,13 +157,20 @@
     <aside class="nb-aside" aria-label="Итоговые характеристики">
 
         @{
-            var totals = Character.CalculateAllStats();
+            var breakdown = Character.CalculateBreakdown();
         }
 
         <section class="nb-panel">
             <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
-                <h2 class="nb-panel-title">Итого</h2>
+                <h2 class="nb-panel-title">Итоговые статы</h2>
                 <span class="nb-panel-sub">@ClassNamesProvider.GetClassName(Character.CharacterClass)</span>
+            </div>
+
+            <div class="nb-legend">
+                <span class="nb-legend-item"><span class="nb-swatch nb-seg-base"></span>Класс</span>
+                <span class="nb-legend-item"><span class="nb-swatch nb-seg-gear"></span>Вещи</span>
+                <span class="nb-legend-item"><span class="nb-swatch nb-seg-gems"></span>Камни</span>
+                <span class="nb-legend-item"><span class="nb-swatch nb-seg-boost"></span>Эликсиры и усиления</span>
             </div>
 
             @foreach (var group in StatGroups)
@@ -123,51 +178,25 @@
                 <div class="nb-group-title">@group.Title</div>
                 @foreach (var statType in group.Types)
                 {
-                    <div class="nb-total-row">
-                        <span>@UiText.StatName(statType)</span>
-                        <span class="nb-total-value">@UiText.FormatNumber(totals[statType])</span>
+                    var part = breakdown[statType];
+                    <div class="nb-stat">
+                        <div class="nb-stat-line">
+                            <span>@UiText.StatName(statType)</span>
+                            <span class="nb-total-value">@UiText.FormatNumber(part.Total)</span>
+                        </div>
+                        @if (part.Total > 0)
+                        {
+                            <div class="nb-bar" role="img"
+                                 aria-label="@($"Класс {UiText.FormatNumber(part.Base)}, вещи {UiText.FormatNumber(part.Gear)}, камни {UiText.FormatNumber(part.Gems)}, эликсиры и усиления {UiText.FormatNumber(part.Boost)}")">
+                                <div class="nb-seg-base" style="width:@Share(part.Base, part.Total)" title="@($"Класс: {UiText.FormatNumber(part.Base)}")"></div>
+                                <div class="nb-seg-gear" style="width:@Share(part.Gear, part.Total)" title="@($"Вещи: {UiText.FormatNumber(part.Gear)}")"></div>
+                                <div class="nb-seg-gems" style="width:@Share(part.Gems, part.Total)" title="@($"Камни: {UiText.FormatNumber(part.Gems)}")"></div>
+                                <div class="nb-seg-boost" style="width:@Share(part.Boost, part.Total)" title="@($"Эликсиры и усиления: {UiText.FormatNumber(part.Boost)}")"></div>
+                            </div>
+                        }
                     </div>
                 }
             }
-        </section>
-
-        <section class="nb-panel">
-            <h2 class="nb-panel-title" style="font-size:18px">Усиления</h2>
-            <MudStack Class="mt-3">
-                <MudSelect
-                    T="Elixir"
-                    Label="Выберите атакующий эликсир"
-                    @bind-Value="@Character.AttackElixir"
-                    ToStringFunc="@(e => e.Name)"
-                    Variant="Variant.Outlined"
-                    Margin="Margin.Dense"
-                    Clearable>
-
-                    @foreach (var elixir in ElixirProvider.AttackElixirs)
-                    {
-                        <MudSelectItem Value="@elixir"/>
-                    }
-                </MudSelect>
-                <MudSelect
-                    T="Elixir"
-                    Label="Выберите защитный эликсир"
-                    @bind-Value="@Character.DefenseElixir"
-                    ToStringFunc="@(e => e.Name)"
-                    Variant="Variant.Outlined"
-                    Margin="Margin.Dense"
-                    Clearable>
-
-                    @foreach (var elixir in ElixirProvider.DefenceElixirs)
-                    {
-                        <MudSelectItem Value="@elixir"/>
-                    }
-                </MudSelect>
-                @foreach (var availableAmplification in Character.AvailableAmplifications)
-                {
-                    <MudCheckBox @bind-Value="@availableAmplification.Used" Label="@availableAmplification.Name" Color="Color.Primary" Dense="true"></MudCheckBox>
-                    <MudText Typo="Typo.caption" Class="ml-8" Style="color: var(--nb-muted)">@availableAmplification.Description</MudText>
-                }
-            </MudStack>
         </section>
 
     </aside>
@@ -208,6 +237,15 @@
             StatType.CharacterSpeed,
         }),
     };
+
+    // Доля части в итоге — ширина сегмента полоски под статом.
+    private static string Share(int part, int total)
+    {
+        if (total <= 0 || part <= 0)
+            return "0%";
+
+        return (part * 100.0 / total).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
+    }
 
     private Character Character { get; set; }
 

@@ -85,65 +85,88 @@ public class Character
 
     public Dictionary<StatType, int> CalculateAllStats()
     {
-        var initStatTypes = Enum.GetValues<StatType>()
-            .Select(statType => new KeyValuePair<StatType, int>(statType, 0));
-        var finalStats = new Dictionary<StatType, int>(initStatTypes);
-        var multipliedStats = GetMultipliedStats();
-        var nonMultipliedStats = GetNonMultipliedStats().ToArray();
+        return CalculateBreakdown().ToDictionary(pair => pair.Key, pair => pair.Value.Total);
+    }
 
-        // Значения статов до применения эликсиров. Проценты камней (концентрации и оружейных)
+    // Считает итоговые характеристики и показывает, из чего каждая сложилась:
+    // класс, вещи, камни, эликсиры и усиления. Сумма частей равна итоговому значению.
+    public Dictionary<StatType, StatBreakdown> CalculateBreakdown()
+    {
+        var statTypes = Enum.GetValues<StatType>();
+        var result = statTypes.ToDictionary(statType => statType, _ => new StatBreakdown());
+
+        // Значения до эликсиров (но после усилений гильдии). Проценты камней (концентрации и оружейных)
         // считаются именно от них, чтобы эликсир не увеличивал бонус от камней.
-        var statsBeforeElixirs = new List<Stat>();
+        var totalsBeforeElixirs = statTypes.ToDictionary(statType => statType, _ => 0);
 
-        foreach (var multipliedStat in multipliedStats)
+        foreach (var stat in GetClassStats())
+            AddMultipliedStat(stat, true, result, totalsBeforeElixirs);
+
+        foreach (var stat in GetGearMultipliedStats())
+            AddMultipliedStat(stat, false, result, totalsBeforeElixirs);
+
+        // Белые статы бижутерии — часть вещей, но усиления и эликсиры на них не действуют.
+        foreach (var stat in GetJewelryWhiteStats())
         {
-            foreach (var amplification in AvailableAmplifications)
+            result[stat.StatType].Gear += stat.StatNumber;
+            totalsBeforeElixirs[stat.StatType] += stat.StatNumber;
+        }
+
+        // Камни силы дают фиксированное значение, усиления и эликсиры на него тоже не действуют.
+        foreach (var stat in GetPowerStoneStats())
+        {
+            result[stat.StatType].Gems += stat.StatNumber;
+            totalsBeforeElixirs[stat.StatType] += stat.StatNumber;
+        }
+
+        // Камни концентрации (и оружейные) дают прибавку в процентах от значения без эликсиров.
+        foreach (var multiplier in GetGemPercentMultipliers())
+        {
+            var bonus = (int)Math.Floor(totalsBeforeElixirs[multiplier.Key] * multiplier.Value);
+            result[multiplier.Key].Gems += bonus;
+        }
+
+        return result;
+    }
+
+    private void AddMultipliedStat(
+        Stat stat,
+        bool isClassStat,
+        Dictionary<StatType, StatBreakdown> result,
+        Dictionary<StatType, int> totalsBeforeElixirs)
+    {
+        var original = stat.StatNumber;
+
+        UseAmplificationMultipliers(stat);
+        totalsBeforeElixirs[stat.StatType] += stat.StatNumber;
+
+        UseElixirMultiplier(AttackElixir, stat);
+        UseElixirMultiplier(DefenseElixir, stat);
+
+        var entry = result[stat.StatType];
+        if (isClassStat)
+            entry.Base += original;
+        else
+            entry.Gear += original;
+        entry.Boost += stat.StatNumber - original;
+    }
+
+    private void UseAmplificationMultipliers(Stat stat)
+    {
+        foreach (var amplification in AvailableAmplifications)
+        {
+            if (!amplification.Used)
+                continue;
+
+            foreach (var increase in amplification.StatTypesToIncrease)
             {
-                if(amplification.Used == false
-                   || amplification.StatTypesToIncrease.All(
-                       stat => stat.StatType != multipliedStat.StatType))
+                if (increase.StatType != stat.StatType)
                     continue;
-                var multiplier = amplification.StatTypesToIncrease
-                    .First(stat => stat.StatType == multipliedStat.StatType).BaseMultiplier;
-                multipliedStat.UseMultiplier(multiplier);
+
+                stat.UseMultiplier(increase.BaseMultiplier);
+                break;
             }
-
-            statsBeforeElixirs.Add(new Stat(multipliedStat.StatType, multipliedStat.StatNumber));
-
-            UseElixirMultiplier(AttackElixir, multipliedStat);
-            UseElixirMultiplier(DefenseElixir, multipliedStat);
         }
-
-        var allStats = multipliedStats.Concat(nonMultipliedStats);
-        foreach (var statGroup in allStats.GroupBy(e => e.StatType))
-        {
-            finalStats[statGroup.Key] = statGroup.Sum(stat => stat.StatNumber);
-        }
-
-        var weaponGemsMultipliers = GetWeaponGemsMultipliers();
-        var concentrationGemsMultipliers = GetConcentrationGemsMultipliers();
-        var allMultipliers = new Dictionary<StatType, double>(weaponGemsMultipliers);
-        foreach (var multiplier in concentrationGemsMultipliers)
-        {
-            if (!allMultipliers.TryGetValue(multiplier.Key, out _))
-                allMultipliers[multiplier.Key] = multiplier.Value;
-            else
-                allMultipliers[multiplier.Key] += multiplier.Value;
-        }
-
-        // Камни дают прибавку в процентах от значения стата без эликсиров; эликсир на этот бонус не влияет.
-        var totalsBeforeElixirs = statsBeforeElixirs
-            .Concat(nonMultipliedStats)
-            .GroupBy(stat => stat.StatType)
-            .ToDictionary(group => group.Key, group => group.Sum(stat => stat.StatNumber));
-
-        foreach (var multiplier in allMultipliers)
-        {
-            var totalBeforeElixirs = totalsBeforeElixirs.TryGetValue(multiplier.Key, out var total) ? total : 0;
-            finalStats[multiplier.Key] += (int)Math.Floor(totalBeforeElixirs * multiplier.Value);
-        }
-
-        return finalStats;
     }
 
     private void UseElixirMultiplier(Elixir? elixir, Stat multipliedStat)
@@ -156,11 +179,15 @@ public class Character
         multipliedStat.UseMultiplier(multiplier);
     }
 
-    private Stat[] GetMultipliedStats()
+    private Stat[] GetClassStats()
+    {
+        return CopyStats(BaseClassStats);
+    }
+
+    private Stat[] GetGearMultipliedStats()
     {
         // TODO check getstats
-        return BaseClassStats
-            .Concat(Cloak.GetStats())
+        return CopyStats(Cloak.GetStats()
             .Concat(Amulet1.GetMultipliedStats())
             .Concat(Amulet2.GetMultipliedStats())
             .Concat(Necklace.GetMultipliedStats())
@@ -175,12 +202,17 @@ public class Character
             .Concat(Shoes.GetMultipliedStats())
             .Concat(Belt.GetMultipliedStats())
             .Concat(MainWeapon.GetStats())
-            .Concat(SecondWeapon?.GetStats() ?? Array.Empty<Stat>())
-            .Select(stat => new Stat(stat.StatType, stat.StatNumber))
-            .ToArray();
+            .Concat(SecondWeapon?.GetStats() ?? Array.Empty<Stat>()));
     }
 
-    private IEnumerable<Stat> GetNonMultipliedStats()
+    // Копии, чтобы множители при расчёте не меняли сами вещи.
+    private static Stat[] CopyStats(IEnumerable<Stat> stats)
+    {
+        return stats.Select(stat => new Stat(stat.StatType, stat.StatNumber)).ToArray();
+    }
+
+    // Камни силы на броне.
+    private IEnumerable<Stat> GetPowerStoneStats()
     {
         return Array.Empty<Stat>()
             .Concat(Helmet.GetNonMultipliedStats())
@@ -190,12 +222,30 @@ public class Character
             .Concat(Gloves.GetNonMultipliedStats())
             .Concat(Bracers.GetNonMultipliedStats())
             .Concat(Shoes.GetNonMultipliedStats())
-            .Concat(Belt.GetNonMultipliedStats())
+            .Concat(Belt.GetNonMultipliedStats());
+    }
+
+    private IEnumerable<Stat> GetJewelryWhiteStats()
+    {
+        return Array.Empty<Stat>()
             .Concat(Amulet1.GetNonMultipliedStats())
             .Concat(Amulet2.GetNonMultipliedStats())
             .Concat(Necklace.GetNonMultipliedStats())
             .Concat(Ring1.GetNonMultipliedStats())
             .Concat(Ring2.GetNonMultipliedStats());
+    }
+
+    private Dictionary<StatType, double> GetGemPercentMultipliers()
+    {
+        var all = new Dictionary<StatType, double>(GetWeaponGemsMultipliers());
+        foreach (var multiplier in GetConcentrationGemsMultipliers())
+        {
+            all[multiplier.Key] = all.TryGetValue(multiplier.Key, out var existing)
+                ? existing + multiplier.Value
+                : multiplier.Value;
+        }
+
+        return all;
     }
 
     private Dictionary<StatType, double> GetWeaponGemsMultipliers()
