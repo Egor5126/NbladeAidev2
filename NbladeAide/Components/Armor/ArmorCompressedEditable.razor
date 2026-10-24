@@ -1,16 +1,32 @@
+@using Models.BaseModels
 @using Models.BaseModels.Armors
+@using Models.Extensions
+@using Models.Multipliers
+@using Models.Names
 
 @inject IDialogService DialogService
 
 @typeparam TArmor where TArmor : ArmorBase
 
-<ArmorCompressedInfo Armor="Armor" />
-
-<br />
-
-<MudButton @onclick="@OpenDialogAsync" Variant="Variant.Outlined" Color="Color.Primary">
-    Редактировать
-</MudButton>
+<ItemCard Slot="@Armor.SimpleName"
+          Name="@Armor.Name"
+          AccentColor="@UiText.Violet"
+          Combination="Armor.StatCombination"
+          OnClick="OpenDialogAsync">
+    @if (HasGem1 || HasGem2)
+    {
+        <div class="nb-tags">
+            @if (HasGem1)
+            {
+                <span class="nb-tag">Камень силы: @Armor.Gem1.Stat</span>
+            }
+            @if (HasGem2)
+            {
+                <span class="nb-tag">Концентрация: @UiText.StatName(Armor.Gem2.StatType!.Value) @StatNumberProvider.GetConcentrationStoneMultiplier(Armor.Gem2.GemLevel).ToPercentString()</span>
+            }
+        </div>
+    }
+</ItemCard>
 
 @code {
     [Parameter]
@@ -19,12 +35,16 @@
     [Parameter]
     public EventCallback<TArmor> ArmorChanged { get; set; }
 
+    private bool HasGem1 => Armor.Gem1.GemLevel != PowerStoneLevel.None && Armor.Gem1.Stat != null;
+
+    private bool HasGem2 => Armor.Gem2.GemLevel != ConcentrationStoneLevel.None && Armor.Gem2.StatType.HasValue;
+
     private async Task OpenDialogAsync()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true};
         var parameters = new DialogParameters<ArmorEditDialog<TArmor>> { { x => x.Armor, Armor } };
 
-        var dialog = await DialogService.ShowAsync<ArmorEditDialog<TArmor>>("Simple Dialog", parameters, options);
+        var dialog = await DialogService.ShowAsync<ArmorEditDialog<TArmor>>(string.Empty, parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)

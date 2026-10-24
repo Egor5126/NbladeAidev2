@@ -2,14 +2,17 @@
 @using Models.Names
 @using Models.Stats
 
-<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Камень концентрации</MudText>
+<div class="nb-gem">
+<h3 class="nb-gem-title">Камень концентрации</h3>
 
 <MudSelect
     T="ConcentrationStoneLevel"
-    Label="Выберите уровень камня"
+    Label="Уровень камня"
     Value="@ConcentrationGem.GemLevel"
     ToStringFunc="@GemNamesProvider.GetConcentrationStoneLevelName"
-    ValueChanged="UpdateGemLevel">
+    ValueChanged="UpdateGemLevel"
+    Variant="Variant.Outlined"
+    Margin="Margin.Dense">
 
     @foreach (var level in Enum.GetValues(typeof(ConcentrationStoneLevel)).Cast<ConcentrationStoneLevel>())
     {
@@ -19,14 +22,17 @@
 
 <MudAutocomplete
     T="StatType?"
-    Label="Выберите характеристику камня"
+    Label="Характеристика камня"
     Value="@ConcentrationGem.StatType"
     SearchFunc="@SearchPotentialStats"
     ValueChanged="UpdateGemStat"
     ToStringFunc="@(statType => statType.HasValue ? StatNamesProvider.GetStatName(statType.Value) : string.Empty)"
     MaxItems="null"
+    Variant="Variant.Outlined"
+    Margin="Margin.Dense"
     Clearable="true"
     Disabled="@(ConcentrationGem.GemLevel == ConcentrationStoneLevel.None)"/>
+</div>
 
 @code {
     [Parameter]

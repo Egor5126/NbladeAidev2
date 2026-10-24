@@ -82,6 +82,7 @@ public static class StatNumberProvider
             StatType.AttackPower => 400,
             StatType.AttackSpeed => 445,
             StatType.Accuracy => 445,
+            StatType.CriticalChance => 445,
             StatType.CriticalDamage => 445,
             StatType.Armor => 4785,
             StatType.MagicArmor => 4785,
@@ -106,6 +107,7 @@ public static class StatNumberProvider
             StatType.AttackPower => 300,
             StatType.AttackSpeed => 333,
             StatType.Accuracy => 333,
+            StatType.CriticalChance => 333,
             StatType.CriticalDamage => 333,
             StatType.Armor => 3589,
             StatType.MagicArmor => 3589,
@@ -155,6 +157,13 @@ public static class StatNumberProvider
                 _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
             },
             StatType.Accuracy => gemLevel switch
+            {
+                PowerStoneLevel.None => 0,
+                PowerStoneLevel.Level6 => 215,
+                PowerStoneLevel.Level10 => 464,
+                _ => throw new ArgumentOutOfRangeException(nameof(gemLevel), gemLevel, null)
+            },
+            StatType.CriticalChance => gemLevel switch
             {
                 PowerStoneLevel.None => 0,
                 PowerStoneLevel.Level6 => 215,
@@ -259,7 +268,7 @@ public static class StatNumberProvider
             {
                 new Stat(StatType.AttackPower, 5902),
                 new Stat(StatType.Accuracy, 6746),
-                new Stat(StatType.CriticalDamage, 5340),
+                new Stat(StatType.CriticalChance, 5340),
                 new Stat(StatType.MagicalResistance, 6746),
                 new Stat(StatType.CriticalDamageResistance, 4778),
                 new Stat(StatType.Evasion, 4778),
@@ -274,7 +283,7 @@ public static class StatNumberProvider
             {
                 new Stat(StatType.AttackPower, 5621),
                 new Stat(StatType.Accuracy, 4683),
-                new Stat(StatType.CriticalDamage, 4683),
+                new Stat(StatType.CriticalChance, 4683),
                 new Stat(StatType.MagicalResistance, 4683),
                 new Stat(StatType.CriticalDamageResistance, 7027),
                 new Stat(StatType.Evasion, 5621),
@@ -289,7 +298,7 @@ public static class StatNumberProvider
             {
                 new Stat(StatType.AttackPower, 6746),
                 new Stat(StatType.Accuracy, 5340),
-                new Stat(StatType.CriticalDamage, 7308),
+                new Stat(StatType.CriticalChance, 7308),
                 new Stat(StatType.MagicalResistance, 4778),
                 new Stat(StatType.CriticalDamageResistance, 5621),
                 new Stat(StatType.Evasion, 7308),
@@ -304,7 +313,7 @@ public static class StatNumberProvider
             {
                 new Stat(StatType.AttackPower, 5115),
                 new Stat(StatType.Accuracy, 4497),
-                new Stat(StatType.CriticalDamage, 5059),
+                new Stat(StatType.CriticalChance, 5059),
                 new Stat(StatType.MagicalResistance, 7027),
                 new Stat(StatType.CriticalDamageResistance, 6183),
                 new Stat(StatType.Evasion, 5115),
@@ -319,7 +328,7 @@ public static class StatNumberProvider
             {
                 new Stat(StatType.AttackPower, 5733),
                 new Stat(StatType.Accuracy, 6736),
-                new Stat(StatType.CriticalDamage, 7026),
+                new Stat(StatType.CriticalChance, 7026),
                 new Stat(StatType.MagicalResistance, 5621),
                 new Stat(StatType.CriticalDamageResistance, 4946),
                 new Stat(StatType.Evasion, 6858),

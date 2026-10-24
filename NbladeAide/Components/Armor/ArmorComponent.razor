@@ -1,39 +1,51 @@
 @using Models.Stats
 @using Models.BaseModels
 @using Models.Multipliers
-@using Models.Providers
 @using Models.Names
 
 @typeparam TArmor where TArmor : ArmorBase
 
-<ArmorCompressedInfo Armor="Armor" />
+<div class="nb-edit">
+    <div class="nb-edit-main">
+        <div class="nb-edit-head">
+            <h3 class="nb-edit-title">Характеристики</h3>
+            <span class="nb-hint">Диапазон подставляется по типу вещи и руне</span>
+        </div>
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
+        <ManualStatCombinationEditor StatCombination="Armor.StatCombination"
+                                     StatCombinationChanged="UpdateStatCombination"
+                                     ScaleMultiplier="@StatScale" />
+    </div>
 
-@* Выбор готовой комбинации из списка временно скрыт — характеристики теперь выбираются вручную ниже *@
+    <div class="nb-edit-side">
+        <h3 class="nb-edit-title">Как будет выглядеть в игре</h3>
 
-<ManualStatCombinationEditor StatCombination="Armor.StatCombination"
-                             StatCombinationChanged="UpdateStatCombination"
-                             ScaleMultiplier="@StatScale" />
+        <ItemTooltip Name="@Armor.Name"
+                     AccentColor="@UiText.Violet"
+                     Lines="@(new[] { UiText.Capitalize(Armor.SimpleName) })"
+                     WhiteStats="@(new[] { Armor.BaseArmorStat, Armor.BaseMagicArmorStat })"
+                     Combination="Armor.StatCombination" />
 
-<MudSelect
-    T="StuffRuneOfImprovementLevel"
-    Label="Выберите уровень руны улучшения"
-    Value="@Armor.RuneOfImprovementLevel"
-    ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
-    ValueChanged="UpdateRuneLevel">
+        <MudSelect
+            T="StuffRuneOfImprovementLevel"
+            Label="Выберите уровень руны улучшения"
+            Value="@Armor.RuneOfImprovementLevel"
+            ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
+            ValueChanged="UpdateRuneLevel"
+            Variant="Variant.Outlined"
+            Margin="Margin.Dense">
 
-    @foreach (var classType in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
-    {
-        <MudSelectItem Value="@classType"/>
-    }
-</MudSelect>
+            @foreach (var classType in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
+            {
+                <MudSelectItem Value="@classType"/>
+            }
+        </MudSelect>
+        <div class="nb-hint-muted">Смените руну — диапазоны для новых характеристик пересчитаются, значения уже выбранных останутся как есть.</div>
 
-<br />
-<GemComponent @bind-Gem="Armor.Gem1"/>
-<br />
-<ConcentrationGemComponent @bind-ConcentrationGem="Armor.Gem2"/>
+        <GemComponent @bind-Gem="Armor.Gem1"/>
+        <ConcentrationGemComponent @bind-ConcentrationGem="Armor.Gem2"/>
+    </div>
+</div>
 
 @code {
     [Parameter]

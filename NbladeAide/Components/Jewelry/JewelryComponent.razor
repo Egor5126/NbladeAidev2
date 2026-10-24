@@ -1,51 +1,71 @@
 @using Models.Stats
 @using Models.BaseModels
+@using Models.Multipliers
 @using Models.Names
 @using Models.BaseModels.Jewelry
-@using Models.Multipliers
-@using Models.Providers
 
 @typeparam TJewelry where TJewelry : JewelryBase
 
-<JewelryCompressedInfo Jewelry="Jewelry" />
+<div class="nb-edit">
+    <div class="nb-edit-main">
+        <div class="nb-edit-head">
+            <h3 class="nb-edit-title">Характеристики</h3>
+            <span class="nb-hint">Диапазон подставляется по редкости и руне</span>
+        </div>
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
+        <ManualStatCombinationEditor StatCombination="Jewelry.StatCombination"
+                                     StatCombinationChanged="UpdateStatCombination"
+                                     ScaleMultiplier="@StatScale" />
+    </div>
 
-@* Выбор готовой комбинации из списка временно скрыт — характеристики теперь выбираются вручную ниже *@
+    <div class="nb-edit-side">
+        <h3 class="nb-edit-title">Как будет выглядеть в игре</h3>
 
-<ManualStatCombinationEditor StatCombination="Jewelry.StatCombination"
-                             StatCombinationChanged="UpdateStatCombination"
-                             ScaleMultiplier="@StatScale" />
+        <ItemTooltip Name="@Jewelry.Name"
+                     AccentColor="@UiText.RarityColor(Jewelry.StuffRarity)"
+                     Lines="@(new[] { Jewelry.SimpleName })"
+                     WhiteStats="@WhiteStats"
+                     Combination="Jewelry.StatCombination" />
 
-<MudSelect
-    T="JewelryRuneOfImprovementLevel"
-    Label="Выберите уровень руны улучшения"
-    Value="@Jewelry.JewelryRuneOfImprovementLevel"
-    ToStringFunc="@RuneNamesProvider.GetJewelryRuneName"
-    ValueChanged="UpdateRuneLevel">
+        <div>
+            <div class="nb-hint-muted" style="margin-bottom:6px">Редкость</div>
+            <div class="nb-seg-group" role="radiogroup" aria-label="Редкость бижутерии">
+                @foreach (var stuffRarity in Enum.GetValues(typeof(StuffRarity)).Cast<StuffRarity>())
+                {
+                    @if (stuffRarity != StuffRarity.Red)
+                    {
+                        var currentRarity = stuffRarity;
+                        var isActive = currentRarity == Jewelry.StuffRarity;
+                        <button type="button"
+                                role="radio"
+                                aria-checked="@(isActive ? "true" : "false")"
+                                class="nb-seg @(isActive ? "nb-seg--active" : "")"
+                                style="color:@UiText.RarityColor(currentRarity)"
+                                @onclick="@(() => UpdateStuffRarity(currentRarity))">
+                            @CommonNamesProvider.GetStuffRarityName(currentRarity)
+                        </button>
+                    }
+                }
+            </div>
+        </div>
 
-    @foreach (var runeLevel in Enum.GetValues(typeof(JewelryRuneOfImprovementLevel)).Cast<JewelryRuneOfImprovementLevel>())
-    {
-        <MudSelectItem Value="@runeLevel"/>
-    }
-</MudSelect>
+        <MudSelect
+            T="JewelryRuneOfImprovementLevel"
+            Label="Выберите уровень руны улучшения"
+            Value="@Jewelry.JewelryRuneOfImprovementLevel"
+            ToStringFunc="@RuneNamesProvider.GetJewelryRuneName"
+            ValueChanged="UpdateRuneLevel"
+            Variant="Variant.Outlined"
+            Margin="Margin.Dense">
 
-<MudSelect
-    T="StuffRarity"
-    Label="Выберите редкость бижутерии"
-    Value="@Jewelry.StuffRarity"
-    ToStringFunc="@CommonNamesProvider.GetStuffRarityName"
-    ValueChanged="UpdateStuffRarity">
-
-    @foreach (var stuffRarity in Enum.GetValues(typeof(StuffRarity)).Cast<StuffRarity>())
-    {
-        @if (stuffRarity != StuffRarity.Red)
-        {
-            <MudSelectItem Value="@stuffRarity"/>
-        }
-    }
-</MudSelect>
+            @foreach (var runeLevel in Enum.GetValues(typeof(JewelryRuneOfImprovementLevel)).Cast<JewelryRuneOfImprovementLevel>())
+            {
+                <MudSelectItem Value="@runeLevel"/>
+            }
+        </MudSelect>
+        <div class="nb-hint-muted">Броня и магическая броня считаются сами по редкости и руне. Смените редкость или руну — диапазоны для новых характеристик пересчитаются, значения уже выбранных останутся как есть.</div>
+    </div>
+</div>
 
 @code {
     [Parameter]
@@ -59,6 +79,9 @@
         BaseStuffStatsMultiplier.GetJewelryGreenStatMultiplier()
         * BaseStuffStatsMultiplier.GetStuffRarityMultiplier(Jewelry.StuffRarity)
         * JewelryRuneOfImprovementMultiplier.RuneMultiplier(Jewelry.JewelryRuneOfImprovementLevel);
+
+    private IEnumerable<Stat> WhiteStats =>
+        new[] { Jewelry.BaseArmorStat, Jewelry.BaseMagicArmorStat }.Where(stat => stat.StatNumber > 0);
 
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {

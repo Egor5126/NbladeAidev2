@@ -5,44 +5,61 @@
 @for (var i = 0; i < SlotCount; i++)
 {
     var index = i;
-    <MudGrid Class="mb-2">
-        <MudItem xs="12">
-            <MudAutocomplete T="StatType?"
-                             Label="@($"Характеристика {index + 1}")"
-                             Value="@_slots[index].StatType"
-                             SearchFunc="@SearchAvailableStats"
-                             ValueChanged="@(newType => UpdateSlotType(index, newType))"
-                             ToStringFunc="@(t => t.HasValue ? StatNamesProvider.GetStatName(t.Value) : string.Empty)"
-                             MaxItems="null"
-                             Clearable="true" />
-        </MudItem>
-        <MudItem xs="4">
-            <MudNumericField T="int"
-                             Label="Мин"
-                             Value="@_slots[index].Min"
-                             Variant="Variant.Outlined"
-                             Disabled="@(!_slots[index].StatType.HasValue)"
-                             ValueChanged="@(newMin => UpdateSlotMin(index, newMin))" />
-        </MudItem>
-        <MudItem xs="4">
-            <MudNumericField T="int"
-                             Label="Макс"
-                             Value="@_slots[index].Max"
-                             Variant="Variant.Outlined"
-                             Disabled="@(!_slots[index].StatType.HasValue)"
-                             ValueChanged="@(newMax => UpdateSlotMax(index, newMax))" />
-        </MudItem>
-        <MudItem xs="4">
-            <MudNumericField T="int"
-                             Label="Значение на вещи"
-                             Value="@_slots[index].Value"
-                             Min="@_slots[index].Min"
-                             Max="@_slots[index].Max"
-                             Variant="Variant.Outlined"
-                             Disabled="@(!_slots[index].StatType.HasValue)"
-                             ValueChanged="@(newValue => UpdateSlotValue(index, newValue))" />
-        </MudItem>
-    </MudGrid>
+    var slot = _slots[index];
+    var hasType = slot.StatType.HasValue;
+    var hasRange = slot.Max > slot.Min;
+    <div class="nb-slot">
+        <div class="nb-slot-top">
+            <div class="nb-slot-type">
+                <MudAutocomplete T="StatType?"
+                                 Label="Характеристика"
+                                 Value="@slot.StatType"
+                                 SearchFunc="@SearchAvailableStats"
+                                 ValueChanged="@(newType => UpdateSlotType(index, newType))"
+                                 ToStringFunc="@(t => t.HasValue ? UiText.StatName(t.Value) : string.Empty)"
+                                 MaxItems="null"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Clearable="true" />
+            </div>
+            <label class="nb-slot-value @(hasType ? "" : "nb-slot-value--off")">
+                <span class="nb-slot-caption">Значение</span>
+                <span class="nb-slot-valuebox">
+                    <span class="nb-slot-plus" aria-hidden="true">+</span>
+                    <input type="number"
+                           class="nb-num nb-num--value"
+                           value="@slot.Value"
+                           disabled="@(!hasType)"
+                           @onchange="@(e => CommitSlotNumber(index, e, SlotField.Value))" />
+                </span>
+            </label>
+        </div>
+        <div class="nb-slot-range">
+            <input type="number"
+                   class="nb-num nb-num--bound"
+                   aria-label="Минимум"
+                   title="Минимум диапазона"
+                   value="@slot.Min"
+                   disabled="@(!hasType)"
+                   @onchange="@(e => CommitSlotNumber(index, e, SlotField.Min))" />
+            <input type="range"
+                   class="nb-range"
+                   aria-label="Значение на вещи"
+                   min="@slot.Min"
+                   max="@slot.Max"
+                   value="@slot.Value"
+                   disabled="@(!hasType || !hasRange)"
+                   @oninput="@(e => PreviewSlotValue(index, e))"
+                   @onchange="@(e => CommitSlotValue(index, e))" />
+            <input type="number"
+                   class="nb-num nb-num--bound nb-num--bound-max"
+                   aria-label="Максимум"
+                   title="Максимум диапазона"
+                   value="@slot.Max"
+                   disabled="@(!hasType)"
+                   @onchange="@(e => CommitSlotNumber(index, e, SlotField.Max))" />
+        </div>
+    </div>
 }
 
 @code {
@@ -92,9 +109,19 @@
     {
         // Игра допускает до 4 одинаковых характеристик на одной вещи — не исключаем
         // типы, уже выбранные в других полях.
-        var options = Enum.GetValues<StatType>()
+        var allTypes = Enum.GetValues<StatType>()
             .Where(t => t != StatType.CharacterSpeed)
+            .ToArray();
+
+        // Когда характеристика уже выбрана, в поле стоит её название, и при повторном открытии списка
+        // оно приходит сюда как строка поиска. Если оно целиком совпадает с названием стата —
+        // игрок не печатал поиск, а просто открыл список, поэтому показываем все варианты.
+        var isExactName = allTypes.Any(t =>
+            string.Equals(StatNamesProvider.GetStatName(t), value, StringComparison.OrdinalIgnoreCase));
+
+        var options = allTypes
             .Where(t => string.IsNullOrWhiteSpace(value)
+                        || isExactName
                         || StatNamesProvider.GetStatName(t).Contains(value, StringComparison.OrdinalIgnoreCase))
             .Select(t => (StatType?)t);
 
@@ -121,6 +148,29 @@
         await CommitAsync();
     }
 
+    private enum SlotField { Value, Min, Max }
+
+    // Обычные числовые поля вместо MudNumericField: выглядят как цифры в макете, а не как отдельные формы.
+    private async Task CommitSlotNumber(int index, ChangeEventArgs e, SlotField field)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var number))
+            return;
+
+        number = Math.Max(0, number);
+        switch (field)
+        {
+            case SlotField.Value:
+                await UpdateSlotValue(index, number);
+                break;
+            case SlotField.Min:
+                await UpdateSlotMin(index, number);
+                break;
+            default:
+                await UpdateSlotMax(index, number);
+                break;
+        }
+    }
+
     private async Task UpdateSlotMin(int index, int newMin)
     {
         var slot = _slots[index];
@@ -142,9 +192,41 @@
     private async Task UpdateSlotValue(int index, int newValue)
     {
         var slot = _slots[index];
-        var clamped = Math.Clamp(newValue, slot.Min, slot.Max);
-        _slots[index] = (slot.StatType, slot.Min, slot.Max, clamped);
+
+        // Пока диапазон не задан (мин = макс), диапазон просто следует за введённым значением.
+        if (slot.Max <= slot.Min)
+        {
+            _slots[index] = (slot.StatType, newValue, newValue, newValue);
+        }
+        else
+        {
+            var clamped = Math.Clamp(newValue, slot.Min, slot.Max);
+            _slots[index] = (slot.StatType, slot.Min, slot.Max, clamped);
+        }
+
         await CommitAsync();
+    }
+
+    // Пока ползунок тянут — только обновляем число на экране, без пересчёта вещи.
+    private void PreviewSlotValue(int index, ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var value))
+            return;
+
+        var slot = _slots[index];
+        if (slot.Max <= slot.Min)
+            return;
+
+        _slots[index] = (slot.StatType, slot.Min, slot.Max, Math.Clamp(value, slot.Min, slot.Max));
+    }
+
+    // Когда ползунок отпустили — сохраняем значение в вещь.
+    private async Task CommitSlotValue(int index, ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var value))
+            return;
+
+        await UpdateSlotValue(index, value);
     }
 
     private async Task CommitAsync()

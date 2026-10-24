@@ -12,218 +12,212 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudSelect
-    T="CharacterClass"
-    Value="@Character.CharacterClass"
-    ToStringFunc="@ClassNamesProvider.GetClassName"
-    Label="Выберите класс персонажа"
-    ValueChanged="ChangeCharacterClass"
-    AnchorOrigin="Origin.BottomCenter"
-    Variant="Variant.Outlined">
-
+<div class="nb-toolbar">
     @foreach (var classType in Enum.GetValues(typeof(CharacterClass)).Cast<CharacterClass>())
     {
-        <MudSelectItem Value="@classType"/>
+        var currentClass = classType;
+        <button type="button"
+                class="nb-chip @(currentClass == Character.CharacterClass ? "nb-chip--active" : "")"
+                aria-pressed="@(currentClass == Character.CharacterClass ? "true" : "false")"
+                @onclick="@(() => ChangeCharacterClass(currentClass))">
+            @ClassNamesProvider.GetClassName(currentClass)
+        </button>
     }
-</MudSelect>
+    <div class="nb-toolbar-spacer"></div>
+    <MudButton @onclick="ShareBuildAsync" Variant="Variant.Filled" Color="Color.Primary">
+        Поделиться билдом
+    </MudButton>
+</div>
 
+<div class="nb-layout">
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Экипировка</MudText>
-<MudGrid Class="px-8 py-2">
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.Cuirass" TArmor="Cuirass" />
-    </MudItem>
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.Highway" TArmor="Highway"/>
-    </MudItem>
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.ShoulderPad" TArmor="ShoulderPad"/>
-    </MudItem>
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.Helmet" TArmor="Helmet"/>
-    </MudItem>
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.Shoes" TArmor="Shoes"/>
-    </MudItem>
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.Gloves" TArmor="Gloves"/>
-    </MudItem>
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.Bracers" TArmor="Bracers"/>
-    </MudItem>
-    <MudItem xs="4">
-        <ArmorCompressedEditable @bind-Armor="Character.Belt" TArmor="Belt"/>
-    </MudItem>
-</MudGrid>
+    <div class="nb-main">
 
+        <section>
+            <h2 class="nb-section-title">Оружие</h2>
+            <div class="nb-grid nb-grid--wide">
+                <div>
+                    <MudSelect
+                        T="WeaponType"
+                        Label="Тип основного оружия"
+                        Value="@Character.MainWeapon.WeaponType"
+                        ToStringFunc="@WeaponNamesProvider.GetWeaponNameByType"
+                        ValueChanged="ChangeMainWeapon"
+                        Variant="Variant.Outlined"
+                        Margin="Margin.Dense"
+                        Class="mb-3">
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Оружие</MudText>
-<MudGrid Class="px-8 py-2">
-    <MudItem xs="4">
-        <MudSelect
-            T="WeaponType"
-            Label="Выберите тип основного оружия"
-            Value="@Character.MainWeapon.WeaponType"
-            ToStringFunc="@WeaponNamesProvider.GetWeaponNameByType"
-            ValueChanged="ChangeMainWeapon">
-
-            @foreach (var weaponType in Character.MainWeapon.GetAvailableWeaponTypes())
-            {
-                <MudSelectItem Value="@weaponType"/>
-            }
-        </MudSelect>
-        <br />
-        <WeaponCompressedEditable @bind-Weapon="Character.MainWeapon"/>
-    </MudItem>
-    @if (Character.SecondWeapon != null)
-    {
-        <MudItem xs="4">
-            <MudSelect
-                T="WeaponType"
-                Label="Выберите тип дополнительного оружия"
-                Value="@Character.SecondWeapon.WeaponType"
-                ToStringFunc="@WeaponNamesProvider.GetWeaponNameByType"
-                ValueChanged="@(newType => Character.SecondWeapon = Character.SecondWeapon.CreateFromWeaponType(newType))">
-
-                @foreach (var weaponType in Character.SecondWeapon.GetAvailableWeaponTypes())
+                        @foreach (var weaponType in Character.MainWeapon.GetAvailableWeaponTypes())
+                        {
+                            <MudSelectItem Value="@weaponType"/>
+                        }
+                    </MudSelect>
+                    <WeaponCompressedEditable @bind-Weapon="Character.MainWeapon"/>
+                </div>
+                @if (Character.SecondWeapon != null)
                 {
-                    <MudSelectItem Value="@weaponType"/>
+                    <div>
+                        <MudSelect
+                            T="WeaponType"
+                            Label="Тип доп. оружия"
+                            Value="@Character.SecondWeapon.WeaponType"
+                            ToStringFunc="@WeaponNamesProvider.GetWeaponNameByType"
+                            ValueChanged="@(newType => Character.SecondWeapon = Character.SecondWeapon.CreateFromWeaponType(newType))"
+                            Variant="Variant.Outlined"
+                            Margin="Margin.Dense"
+                            Class="mb-3">
+
+                            @foreach (var weaponType in Character.SecondWeapon.GetAvailableWeaponTypes())
+                            {
+                                <MudSelectItem Value="@weaponType"/>
+                            }
+                        </MudSelect>
+                        <WeaponCompressedEditable @bind-Weapon="Character.SecondWeapon"/>
+                    </div>
                 }
-            </MudSelect>
-            <br />
-            <WeaponCompressedEditable @bind-Weapon="Character.SecondWeapon"/>
-        </MudItem>
-    }
-</MudGrid>
+            </div>
+        </section>
 
+        <section>
+            <h2 class="nb-section-title">Броня</h2>
+            <div class="nb-grid">
+                <ArmorCompressedEditable @bind-Armor="Character.Cuirass" TArmor="Cuirass" />
+                <ArmorCompressedEditable @bind-Armor="Character.Highway" TArmor="Highway" />
+                <ArmorCompressedEditable @bind-Armor="Character.ShoulderPad" TArmor="ShoulderPad" />
+                <ArmorCompressedEditable @bind-Armor="Character.Helmet" TArmor="Helmet" />
+                <ArmorCompressedEditable @bind-Armor="Character.Shoes" TArmor="Shoes" />
+                <ArmorCompressedEditable @bind-Armor="Character.Gloves" TArmor="Gloves" />
+                <ArmorCompressedEditable @bind-Armor="Character.Bracers" TArmor="Bracers" />
+                <ArmorCompressedEditable @bind-Armor="Character.Belt" TArmor="Belt" />
+            </div>
+        </section>
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Бижутерия</MudText>
-<MudGrid Class="px-8 py-2">
-    <MudItem xs="4">
-        <JewelryCompressedEditable @bind-Jewelry="Character.Amulet1" TJewelry="Amulet" />
-    </MudItem>
-    <MudItem xs="4">
-        <JewelryCompressedEditable @bind-Jewelry="Character.Amulet2" TJewelry="Amulet" />
-    </MudItem>
-    <MudItem xs="4">
-        <JewelryCompressedEditable @bind-Jewelry="Character.Necklace" TJewelry="Necklace" />
-    </MudItem>
-    <MudItem xs="4">
-        <JewelryCompressedEditable @bind-Jewelry="Character.Ring1" TJewelry="Ring" />
-    </MudItem>
-    <MudItem xs="4">
-        <JewelryCompressedEditable @bind-Jewelry="Character.Ring2" TJewelry="Ring" />
-    </MudItem>
-</MudGrid>
+        <section>
+            <h2 class="nb-section-title">Бижутерия и плащ</h2>
+            <div class="nb-grid">
+                <JewelryCompressedEditable @bind-Jewelry="Character.Amulet1" TJewelry="Amulet" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Amulet2" TJewelry="Amulet" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Necklace" TJewelry="Necklace" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Ring1" TJewelry="Ring" />
+                <JewelryCompressedEditable @bind-Jewelry="Character.Ring2" TJewelry="Ring" />
+                <CloakCompressedEditable @bind-Cloak="Character.Cloak" />
+            </div>
+        </section>
 
+    </div>
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Плащ</MudText>
-<MudGrid Class="px-8 py-2">
-    <MudItem xs="4">
-        <CloakCompressedEditable @bind-Cloak="Character.Cloak" />
-    </MudItem>
-</MudGrid>
+    <aside class="nb-aside" aria-label="Итоговые характеристики">
 
-
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: x-large;")">Усиления</MudText>
-<MudStack>
-    <MudSelect
-        T="Elixir"
-        Label="Выберите атакующий эликсир"
-        @bind-Value="@Character.AttackElixir"
-        ToStringFunc="@(e => e.Name)"
-        Clearable>
-
-        @foreach (var elixir in ElixirProvider.AttackElixirs)
-        {
-            <MudSelectItem Value="@elixir"/>
+        @{
+            var totals = Character.CalculateAllStats();
         }
-    </MudSelect>
-    <MudSelect
-        T="Elixir"
-        Label="Выберите защитный эликсир"
-        @bind-Value="@Character.DefenseElixir"
-        ToStringFunc="@(e => e.Name)"
-        Clearable>
 
-        @foreach (var elixir in ElixirProvider.DefenceElixirs)
-        {
-            <MudSelectItem Value="@elixir"/>
-        }
-    </MudSelect>
-    @foreach (var availableAmplification in Character.AvailableAmplifications)
-    {
-        <MudCheckBox @bind-Value="@availableAmplification.Used" Label="@availableAmplification.Name" Color="Color.Primary" Dense="true" Class="mt-3"></MudCheckBox>
-        <MudText Typo="Typo.subtitle2" Style="@($"color:{Colors.Grey.Darken1};font-style: italic;")" Class="ml-5">@availableAmplification.Description</MudText>
-    }
-</MudStack>
+        <section class="nb-panel">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+                <h2 class="nb-panel-title">Итого</h2>
+                <span class="nb-panel-sub">@ClassNamesProvider.GetClassName(Character.CharacterClass)</span>
+            </div>
 
+            @foreach (var group in StatGroups)
+            {
+                <div class="nb-group-title">@group.Title</div>
+                @foreach (var statType in group.Types)
+                {
+                    <div class="nb-total-row">
+                        <span>@UiText.StatName(statType)</span>
+                        <span class="nb-total-value">@UiText.FormatNumber(totals[statType])</span>
+                    </div>
+                }
+            }
+        </section>
 
-<br />
-<MudButton @onclick="ShareBuildAsync" Variant="Variant.Filled" Color="Color.Primary">
-    Поделиться билдом
-</MudButton>
+        <section class="nb-panel">
+            <h2 class="nb-panel-title" style="font-size:18px">Усиления</h2>
+            <MudStack Class="mt-3">
+                <MudSelect
+                    T="Elixir"
+                    Label="Выберите атакующий эликсир"
+                    @bind-Value="@Character.AttackElixir"
+                    ToStringFunc="@(e => e.Name)"
+                    Variant="Variant.Outlined"
+                    Margin="Margin.Dense"
+                    Clearable>
 
+                    @foreach (var elixir in ElixirProvider.AttackElixirs)
+                    {
+                        <MudSelectItem Value="@elixir"/>
+                    }
+                </MudSelect>
+                <MudSelect
+                    T="Elixir"
+                    Label="Выберите защитный эликсир"
+                    @bind-Value="@Character.DefenseElixir"
+                    ToStringFunc="@(e => e.Name)"
+                    Variant="Variant.Outlined"
+                    Margin="Margin.Dense"
+                    Clearable>
 
-<br />
-<MudStack Row="true" Spacing="6" Justify="Justify.Center" Class="border border-solid mud-border-primary px-2 py-2" Style="@($"background: lavender; position: fixed; bottom: 0; right: 0;")">
-    @{
-        var stats = GetStats();
-        for (var i = 0; i < stats.Length; i += 4)
-        {
-            var p1 = stats[i];
-            var p2 = stats[i + 1];
-            var p3 = stats[i + 2];
-            var p4 = stats[i + 3];
-            <MudItem>
-                <MudPaper Outlined="true" Style="@($"background: WhiteSmoke;")">
-                    <MudStack Row="true" Class="px-1">
-                        <MudText>@StatNamesProvider.GetStatName(p1.StatType):</MudText>
-                        <MudText Class="ml-auto">+@p1.StatNumber</MudText>
-                    </MudStack>
-                    <MudStack Row="true" Class="px-1">
-                        <MudText>@StatNamesProvider.GetStatName(p2.StatType):</MudText>
-                        <MudText Class="ml-auto">+@p2.StatNumber</MudText>
-                    </MudStack>
-                    <MudStack Row="true" Class="px-1">
-                        <MudText>@StatNamesProvider.GetStatName(p3.StatType):</MudText>
-                        <MudText Class="ml-auto">+@p3.StatNumber</MudText>
-                    </MudStack>
-                    <MudStack Row="true" Class="px-1">
-                        <MudText>@StatNamesProvider.GetStatName(p4.StatType):</MudText>
-                        <MudText Class="ml-auto">+@p4.StatNumber</MudText>
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
-        }
-    }
-</MudStack>
+                    @foreach (var elixir in ElixirProvider.DefenceElixirs)
+                    {
+                        <MudSelectItem Value="@elixir"/>
+                    }
+                </MudSelect>
+                @foreach (var availableAmplification in Character.AvailableAmplifications)
+                {
+                    <MudCheckBox @bind-Value="@availableAmplification.Used" Label="@availableAmplification.Name" Color="Color.Primary" Dense="true"></MudCheckBox>
+                    <MudText Typo="Typo.caption" Class="ml-8" Style="color: var(--nb-muted)">@availableAmplification.Description</MudText>
+                }
+            </MudStack>
+        </section>
 
-
-
-
-
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
+    </aside>
+</div>
 
 @code {
+
+    // Группы итоговых характеристик в том порядке, в каком они показываются справа.
+    private static readonly (string Title, StatType[] Types)[] StatGroups =
+    {
+        ("Атака", new[]
+        {
+            StatType.AttackPower,
+            StatType.Accuracy,
+            StatType.CriticalChance,
+            StatType.CriticalDamage,
+            StatType.AttackSpeed,
+        }),
+        ("Защита", new[]
+        {
+            StatType.Armor,
+            StatType.MagicArmor,
+            StatType.MagicalResistance,
+            StatType.CriticalDamageResistance,
+            StatType.Evasion,
+            StatType.Block,
+            StatType.Parry,
+        }),
+        ("Жизнь и энергия", new[]
+        {
+            StatType.Health,
+            StatType.HealthRestoration,
+            StatType.Energy,
+            StatType.EnergyRestoration,
+        }),
+        ("Прочее", new[]
+        {
+            StatType.CharacterSpeed,
+        }),
+    };
 
     private Character Character { get; set; }
 
     protected override Task OnInitializedAsync()
     {
         var buildCode = GetQueryParam("b");
-        if (!string.IsNullOrEmpty(buildCode) && BuildCode.TryDecode(buildCode, out var sharedCharacter) && sharedCharacter != null)
+        // Заранее объявлены: из-за && компилятор не считает out-переменные присвоенными в ветке else.
+        Character? sharedCharacter = null;
+        string? decodeError = null;
+        if (!string.IsNullOrEmpty(buildCode) && BuildCode.TryDecode(buildCode, out sharedCharacter, out decodeError) && sharedCharacter != null)
         {
             Character = sharedCharacter;
             CharacterManager.Character = sharedCharacter;
@@ -232,7 +226,11 @@
         else
         {
             if (!string.IsNullOrEmpty(buildCode))
+            {
+                // Причину пишем в консоль браузера — так проще разобраться, чем со «сломанной ссылкой».
+                Console.WriteLine($"Не удалось прочитать билд по ссылке: {decodeError}");
                 Snackbar.Add("Не удалось прочитать билд по этой ссылке — открыт билд по умолчанию", Severity.Warning);
+            }
             Character = CharacterManager.Character;
         }
 
@@ -265,11 +263,6 @@
         var parameters = new DialogParameters<ShareBuildDialog> { { x => x.Url, url } };
         var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
         await DialogService.ShowAsync<ShareBuildDialog>("Поделиться билдом", parameters, options);
-    }
-
-    private Stat[] GetStats()
-    {
-        return Character.CalculateAllStats().Select(e => new Stat(e.Key, e.Value)).ToArray();
     }
 
     private void ChangeCharacterClass(CharacterClass newClass)

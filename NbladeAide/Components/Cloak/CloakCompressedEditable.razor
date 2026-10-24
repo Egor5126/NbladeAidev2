@@ -2,13 +2,11 @@
 
 @inject IDialogService DialogService
 
-<CloakCompressedInfo Cloak="Cloak" />
-
-<br />
-
-<MudButton @onclick="@OpenDialogAsync" Variant="Variant.Outlined" Color="Color.Primary">
-    Редактировать
-</MudButton>
+<ItemCard Slot="@Cloak.SimpleName"
+          Name="@Cloak.Name"
+          AccentColor="@UiText.RarityColor(Cloak.StuffRarity)"
+          Combination="Cloak.StatCombination"
+          OnClick="OpenDialogAsync" />
 
 @code {
     [Parameter]
@@ -22,7 +20,7 @@
         var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
         var parameters = new DialogParameters<CloakEditDialog> { { x => x.Cloak, Cloak } };
 
-        var dialog = await DialogService.ShowAsync<CloakEditDialog>("Simple Dialog", parameters, options);
+        var dialog = await DialogService.ShowAsync<CloakEditDialog>(string.Empty, parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)

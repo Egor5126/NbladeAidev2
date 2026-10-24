@@ -2,10 +2,11 @@
 
 <MudDialog>
     <TitleContent>
-        Изменение характеристик
+        <div class="nb-eyebrow">@_draft.SimpleName</div>
+        <div class="nb-dialog-name" style="color:@UiText.Violet">@_draft.Name</div>
     </TitleContent>
     <DialogContent>
-        <WeaponComponent @bind-Weapon="Weapon" />
+        <WeaponComponent @bind-Weapon="_draft" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Отмена</MudButton>
@@ -20,9 +21,17 @@
     [Parameter]
     public WeaponBase Weapon { get; set; }
 
+    // Правим копию вещи: оригинал в персонаже подменяется только по кнопке «Сохранить».
+    private WeaponBase _draft = null!;
+
+    protected override void OnInitialized()
+    {
+        _draft = Weapon.CreateFromInstance();
+    }
+
     private void Submit()
     {
-        MudDialog.Close(DialogResult.Ok(Weapon));
+        MudDialog.Close(DialogResult.Ok(_draft));
     }
 
     private void Cancel() => MudDialog.Cancel();

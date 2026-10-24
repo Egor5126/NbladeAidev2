@@ -1,3 +1,4 @@
+using System.Globalization;
 using Models;
 using Models.BaseModels;
 using Models.BaseModels.Amplification;
@@ -12,9 +13,47 @@ namespace Models.Sharing;
 // Кодирует и раскодирует билд персонажа в компактную строку, чтобы её можно было
 // положить в ссылку и поделиться ею. Ничего не хранится на сервере — весь билд
 // целиком лежит в самой ссылке.
+//
+// Формат: «v2.<число>.<число>…». Первый токен — версия формата. Строки без версии (первые ссылки)
+// читаются как версия 1: там эликсиры и усиления хранились по порядку в списке, в версии 2 —
+// по постоянным номерам из таблиц ниже.
+//
+// Правила, чтобы чужие ссылки не ломались:
+//  - числа enum'ов, которые попадают в ссылку, не менять и не переставлять (новые — только в конец);
+//  - номера в ElixirIds и AmplificationIds не менять и не переиспользовать;
+//  - если структуру данных после версии нужно изменить — увеличить CurrentVersion и
+//    оставить чтение старой версии.
 public static class BuildCode
 {
     private const char Separator = '.';
+    private const char VersionMarker = 'v';
+    private const int CurrentVersion = 2;
+
+    // Защита от испорченных/подделанных ссылок: не даём заказать огромные массивы.
+    private const int MaxStatsPerCombination = 8;
+    private const int MaxWeaponGems = 16;
+    private const int MaxAmplifications = 32;
+
+    // Постоянные номера эликсиров (0 зарезервирован под «нет эликсира»).
+    // Привязаны к классам, а не к тому, как называется эликсир в интерфейсе.
+    private static readonly (int Id, Type Type)[] ElixirIds =
+    {
+        (1, typeof(BattleElixir10)),
+        (2, typeof(BattleElixir15)),
+        (10, typeof(AgilityElixir15)),
+        (11, typeof(AgilityElixir30)),
+        (12, typeof(HealthElixir10)),
+        (13, typeof(HealthElixir15)),
+        (14, typeof(DefenceElixir10)),
+        (15, typeof(DefenceElixir15)),
+    };
+
+    // Постоянные номера усилений.
+    private static readonly (int Id, Type Type)[] AmplificationIds =
+    {
+        (1, typeof(TrainedFighters)),
+        (2, typeof(UniversalSoldiers)),
+    };
 
     public static string Encode(Character character)
     {
@@ -49,36 +88,71 @@ public static class BuildCode
             EncodeWeapon(character.SecondWeapon, parts);
         }
 
-        parts.Add(GetElixirIndex(character.AttackElixir, ElixirProvider.AttackElixirs));
-        parts.Add(GetElixirIndex(character.DefenseElixir, ElixirProvider.DefenceElixirs));
+        parts.Add(GetId(character.AttackElixir, ElixirIds, "эликсир"));
+        parts.Add(GetId(character.DefenseElixir, ElixirIds, "эликсир"));
 
         parts.Add(character.AvailableAmplifications.Length);
         foreach (var amplification in character.AvailableAmplifications)
         {
+            parts.Add(GetId(amplification, AmplificationIds, "усиление"));
             parts.Add(amplification.Used ? 1 : 0);
         }
 
-        return string.Join(Separator, parts);
+        return $"{VersionMarker}{CurrentVersion}{Separator}{string.Join(Separator, parts)}";
     }
 
     public static bool TryDecode(string? code, out Character? character)
     {
-        character = null;
-        if (string.IsNullOrWhiteSpace(code))
-            return false;
+        return TryDecode(code, out character, out _);
+    }
 
-        var tokens = code.Split(Separator);
-        var values = new int[tokens.Length];
-        for (var i = 0; i < tokens.Length; i++)
+    // error — короткое объяснение, что не так со ссылкой (для логов и отладки).
+    public static bool TryDecode(string? code, out Character? character, out string? error)
+    {
+        character = null;
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(code))
         {
-            if (!int.TryParse(tokens[i], out values[i]))
+            error = "Пустой код билда.";
+            return false;
+        }
+
+        var tokens = code.Trim().Split(Separator);
+
+        var version = 1;
+        var firstValueToken = 0;
+        if (tokens[0].Length > 0 && char.ToLowerInvariant(tokens[0][0]) == VersionMarker)
+        {
+            if (!int.TryParse(tokens[0].AsSpan(1), NumberStyles.None, CultureInfo.InvariantCulture, out version))
+            {
+                error = $"Не удалось прочитать версию билда «{tokens[0]}».";
                 return false;
+            }
+
+            firstValueToken = 1;
+        }
+
+        if (version < 1 || version > CurrentVersion)
+        {
+            error = $"Неизвестная версия билда: {version} (поддерживаются 1–{CurrentVersion}).";
+            return false;
+        }
+
+        var values = new int[tokens.Length - firstValueToken];
+        for (var i = 0; i < values.Length; i++)
+        {
+            if (!int.TryParse(tokens[i + firstValueToken], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out values[i]))
+            {
+                error = $"Не число в позиции {i + firstValueToken}: «{tokens[i + firstValueToken]}».";
+                return false;
+            }
         }
 
         try
         {
             var cursor = new Cursor(values);
-            var characterClass = (CharacterClass)cursor.Next();
+            var characterClass = ReadEnum<CharacterClass>(cursor, "класс персонажа");
             var result = new Character(characterClass);
 
             result.Cloak = DecodeCloak(cursor, result.Cloak);
@@ -105,31 +179,24 @@ public static class BuildCode
                 ? DecodeWeapon(cursor, result.SecondWeapon)
                 : null;
 
-            var attackElixirIndex = cursor.Next();
-            result.AttackElixir = attackElixirIndex >= 0 && attackElixirIndex < ElixirProvider.AttackElixirs.Length
-                ? ElixirProvider.AttackElixirs[attackElixirIndex]
-                : null;
+            result.AttackElixir = ReadElixir(cursor, version, ElixirProvider.AttackElixirs, "атакующий эликсир");
+            result.DefenseElixir = ReadElixir(cursor, version, ElixirProvider.DefenceElixirs, "защитный эликсир");
 
-            var defenseElixirIndex = cursor.Next();
-            result.DefenseElixir = defenseElixirIndex >= 0 && defenseElixirIndex < ElixirProvider.DefenceElixirs.Length
-                ? ElixirProvider.DefenceElixirs[defenseElixirIndex]
-                : null;
-
-            var amplificationsCount = cursor.Next();
-            for (var i = 0; i < amplificationsCount; i++)
-            {
-                var used = cursor.Next() == 1;
-                if (i < result.AvailableAmplifications.Length)
-                    result.AvailableAmplifications[i].Used = used;
-            }
+            DecodeAmplifications(cursor, version, result);
 
             character = result;
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is BuildCodeFormatException
+                                       or IndexOutOfRangeException
+                                       or InvalidCastException
+                                       or ArgumentException
+                                       or InvalidOperationException)
         {
-            // Ссылка повреждена, устарела или сделана вручную с ошибкой — просто не открываем билд
+            // Ссылка повреждена, устарела или сделана вручную с ошибкой — просто не открываем билд,
+            // а причину отдаём наружу, чтобы её было видно при отладке.
             character = null;
+            error = ex.Message;
             return false;
         }
     }
@@ -145,8 +212,8 @@ public static class BuildCode
     private static Cloak DecodeCloak(Cursor cursor, Cloak current)
     {
         var combination = ReadCombination(cursor);
-        var stuffRarity = (StuffRarity)cursor.Next();
-        var runeLevel = (StuffRuneOfImprovementLevel)cursor.Next();
+        var stuffRarity = ReadEnum<StuffRarity>(cursor, "редкость плаща");
+        var runeLevel = ReadEnum<StuffRuneOfImprovementLevel>(cursor, "руна плаща");
         var result = current.CreateFromInstance(combination, runeLevel, stuffRarity);
         DecodeStatValues(cursor, result.StatCombination);
         return result;
@@ -162,8 +229,8 @@ public static class BuildCode
     private static JewelryBase DecodeJewelry(Cursor cursor, JewelryBase current)
     {
         var combination = ReadCombination(cursor);
-        var stuffRarity = (StuffRarity)cursor.Next();
-        var runeLevel = (JewelryRuneOfImprovementLevel)cursor.Next();
+        var stuffRarity = ReadEnum<StuffRarity>(cursor, "редкость бижутерии");
+        var runeLevel = ReadEnum<JewelryRuneOfImprovementLevel>(cursor, "руна бижутерии");
         return current.CreateFromInstance(combination, runeLevel, stuffRarity);
     }
 
@@ -180,14 +247,11 @@ public static class BuildCode
     private static ArmorBase DecodeArmor(Cursor cursor, ArmorBase current)
     {
         var combination = ReadCombination(cursor);
-        var runeLevel = (StuffRuneOfImprovementLevel)cursor.Next();
-        var gem1StatTypeRaw = cursor.Next();
-        var gem1Level = (PowerStoneLevel)cursor.Next();
-        var gem2StatTypeRaw = cursor.Next();
-        var gem2Level = (ConcentrationStoneLevel)cursor.Next();
-
-        StatType? gem1StatType = gem1StatTypeRaw == -1 ? null : (StatType)gem1StatTypeRaw;
-        StatType? gem2StatType = gem2StatTypeRaw == -1 ? null : (StatType)gem2StatTypeRaw;
+        var runeLevel = ReadEnum<StuffRuneOfImprovementLevel>(cursor, "руна брони");
+        var gem1StatType = ReadOptionalStatType(cursor, "характеристика камня силы");
+        var gem1Level = ReadEnum<PowerStoneLevel>(cursor, "уровень камня силы");
+        var gem2StatType = ReadOptionalStatType(cursor, "характеристика камня концентрации");
+        var gem2Level = ReadEnum<ConcentrationStoneLevel>(cursor, "уровень камня концентрации");
 
         var result = current.CreateFromInstance(combination, runeLevel);
         result.Gem1 = new Gem(gem1StatType, gem1Level);
@@ -210,15 +274,16 @@ public static class BuildCode
 
     private static WeaponBase DecodeWeapon(Cursor cursor, WeaponBase current)
     {
-        var weaponType = (WeaponType)cursor.Next();
+        var weaponType = ReadEnum<WeaponType>(cursor, "тип оружия");
         var combination = ReadCombination(cursor);
-        var runeLevel = (StuffRuneOfImprovementLevel)cursor.Next();
-        var gemCount = cursor.Next();
+        var runeLevel = ReadEnum<StuffRuneOfImprovementLevel>(cursor, "руна оружия");
+        var gemCount = cursor.NextCount(MaxWeaponGems, "число камней оружия");
 
         var gems = new (StatType StatType, GemLevel GemLevel)[gemCount];
         for (var i = 0; i < gemCount; i++)
         {
-            gems[i] = ((StatType)cursor.Next(), (GemLevel)cursor.Next());
+            gems[i] = (ReadEnum<StatType>(cursor, "характеристика камня оружия"),
+                ReadEnum<GemLevel>(cursor, "уровень камня оружия"));
         }
 
         var weapon = current.WeaponType == weaponType ? current : current.CreateFromWeaponType(weaponType);
@@ -245,7 +310,7 @@ public static class BuildCode
 
     private static void DecodeStatValues(Cursor cursor, StatCombination combination)
     {
-        var count = cursor.Next();
+        var count = cursor.NextCount(MaxStatsPerCombination, "число значений характеристик");
         for (var i = 0; i < count; i++)
         {
             var value = cursor.Next();
@@ -256,31 +321,43 @@ public static class BuildCode
 
     // Сохраняет комбинацию характеристик вещи: либо ссылку на именованную комбинацию
     // из общего списка (индекс >= 0), либо специальное состояние — "ещё не выбрана"
-    // (-1) или "собрана игроком вручную" (-2, с полным списком стат+значение).
+    // (-1) или "собрана игроком вручную" (-2, с полным списком стат+мин+макс+значение).
+    //
+    // Индекс именованной комбинации — это позиция в StatCombinationsList, поэтому список
+    // можно только дополнять в конец. Если комбинацию в списке найти не удалось, она сохраняется
+    // как ручная (-2) с теми же числами — так билд не искажается.
     private static void EncodeCombination(StatCombination combination, List<int> parts)
     {
         parts.Add((int)combination.StatCombinationType);
 
-        if (combination is CustomStatCombination custom)
+        if (combination is EmptyStatCombination)
         {
-            parts.Add(-2);
-            parts.Add(combination.Stats.Length);
-            for (var i = 0; i < combination.Stats.Length; i++)
-            {
-                parts.Add((int)combination.Stats[i].StatType);
-                parts.Add(custom.GetMin(i));
-                parts.Add(custom.GetMax(i));
-                parts.Add(combination.Stats[i].StatNumber);
-            }
+            parts.Add(-1);
             return;
         }
 
-        parts.Add(GetCombinationIndex(combination));
+        if (combination is not CustomStatCombination && TryGetCombinationIndex(combination, out var index))
+        {
+            parts.Add(index);
+            return;
+        }
+
+        var custom = combination as CustomStatCombination;
+        parts.Add(-2);
+        parts.Add(combination.Stats.Length);
+        for (var i = 0; i < combination.Stats.Length; i++)
+        {
+            var value = combination.Stats[i].StatNumber;
+            parts.Add((int)combination.Stats[i].StatType);
+            parts.Add(custom?.GetMin(i) ?? value);
+            parts.Add(custom?.GetMax(i) ?? value);
+            parts.Add(value);
+        }
     }
 
     private static StatCombination ReadCombination(Cursor cursor)
     {
-        var type = (StatCombinationType)cursor.Next();
+        var type = ReadEnum<StatCombinationType>(cursor, "тип комбинации характеристик");
         var index = cursor.Next();
 
         // -1 значит, что игрок ещё не выбрал конкретную комбинацию характеристик для этой вещи.
@@ -291,11 +368,11 @@ public static class BuildCode
         // диапазоны и текущие значения целиком.
         if (index == -2)
         {
-            var count = cursor.Next();
+            var count = cursor.NextCount(MaxStatsPerCombination, "число характеристик вещи");
             var stats = new (StatType StatType, int Min, int Max, int Value)[count];
             for (var i = 0; i < count; i++)
             {
-                var statType = (StatType)cursor.Next();
+                var statType = ReadEnum<StatType>(cursor, "характеристика вещи");
                 var min = cursor.Next();
                 var max = cursor.Next();
                 var value = cursor.Next();
@@ -308,19 +385,15 @@ public static class BuildCode
             ? StatCombinationsList.ThreeStatCombinations()
             : StatCombinationsList.FourStateCombinations();
 
-        if (pool.Length == 0)
-            throw new InvalidOperationException("No stat combinations available.");
+        // Раньше неверный индекс молча заменялся ближайшим — теперь это ошибка ссылки.
+        if (index < 0 || index >= pool.Length)
+            throw new BuildCodeFormatException($"Неизвестная комбинация характеристик с номером {index}.");
 
-        index = Math.Clamp(index, 0, pool.Length - 1);
         return pool[index];
     }
 
-    private static int GetCombinationIndex(StatCombination combination)
+    private static bool TryGetCombinationIndex(StatCombination combination, out int index)
     {
-        // Комбинация ещё не выбрана игроком — сохраняем это состояние отдельным индексом.
-        if (combination is EmptyStatCombination)
-            return -1;
-
         var pool = combination.StatCombinationType == StatCombinationType.ThreeStats
             ? StatCombinationsList.ThreeStatCombinations()
             : StatCombinationsList.FourStateCombinations();
@@ -328,12 +401,14 @@ public static class BuildCode
         for (var i = 0; i < pool.Length; i++)
         {
             if (StatTypesMatch(pool[i], combination))
-                return i;
+            {
+                index = i;
+                return true;
+            }
         }
 
-        // На случай если комбинацию не удалось найти (не должно происходить) —
-        // берём первую из списка, чтобы билд всё равно сохранился, пусть и неточно.
-        return 0;
+        index = -1;
+        return false;
     }
 
     private static bool StatTypesMatch(StatCombination a, StatCombination b)
@@ -350,18 +425,111 @@ public static class BuildCode
         return true;
     }
 
-    private static int GetElixirIndex(Elixir? elixir, Elixir[] pool)
+    private static int GetId(object? item, (int Id, Type Type)[] table, string kind)
     {
-        if (elixir == null)
-            return -1;
+        if (item == null)
+            return 0;
 
-        for (var i = 0; i < pool.Length; i++)
+        foreach (var entry in table)
         {
-            if (pool[i].GetType() == elixir.GetType())
-                return i;
+            if (entry.Type == item.GetType())
+                return entry.Id;
         }
 
-        return -1;
+        throw new InvalidOperationException(
+            $"Для {kind} «{item.GetType().Name}» нет постоянного номера в BuildCode — добавьте его в таблицу.");
+    }
+
+    private static Elixir? ReadElixir(Cursor cursor, int version, Elixir[] pool, string what)
+    {
+        var raw = cursor.Next();
+
+        if (version == 1)
+        {
+            // Версия 1: номер — позиция в списке эликсиров, -1 — нет эликсира.
+            if (raw == -1)
+                return null;
+            if (raw < 0 || raw >= pool.Length)
+                throw new BuildCodeFormatException($"Неизвестный {what} с номером {raw}.");
+            return pool[raw];
+        }
+
+        // Версия 2: постоянный номер эликсира, 0 — нет эликсира.
+        if (raw == 0)
+            return null;
+
+        foreach (var entry in ElixirIds)
+        {
+            if (entry.Id != raw)
+                continue;
+
+            var elixir = pool.FirstOrDefault(e => e.GetType() == entry.Type);
+            if (elixir == null)
+                throw new BuildCodeFormatException($"Эликсир с номером {raw} не подходит как {what}.");
+            return elixir;
+        }
+
+        throw new BuildCodeFormatException($"Неизвестный {what} с номером {raw}.");
+    }
+
+    private static void DecodeAmplifications(Cursor cursor, int version, Character result)
+    {
+        var count = cursor.NextCount(MaxAmplifications, "число усилений");
+
+        for (var i = 0; i < count; i++)
+        {
+            if (version == 1)
+            {
+                // Версия 1: только флаги «включено», по порядку в списке усилений.
+                var usedFlag = cursor.Next() == 1;
+                if (i < result.AvailableAmplifications.Length)
+                    result.AvailableAmplifications[i].Used = usedFlag;
+                continue;
+            }
+
+            var id = cursor.Next();
+            var used = cursor.Next() == 1;
+
+            Type? type = null;
+            foreach (var entry in AmplificationIds)
+            {
+                if (entry.Id == id)
+                    type = entry.Type;
+            }
+
+            if (type == null)
+                throw new BuildCodeFormatException($"Неизвестное усиление с номером {id}.");
+
+            var amplification = result.AvailableAmplifications.FirstOrDefault(a => a.GetType() == type);
+            if (amplification != null)
+                amplification.Used = used;
+        }
+    }
+
+    private static T ReadEnum<T>(Cursor cursor, string what) where T : struct, Enum
+    {
+        return ToEnum<T>(cursor.Next(), what);
+    }
+
+    private static T ToEnum<T>(int raw, string what) where T : struct, Enum
+    {
+        if (!Enum.IsDefined(typeof(T), raw))
+            throw new BuildCodeFormatException($"Неизвестное значение {raw} для «{what}».");
+        return (T)Enum.ToObject(typeof(T), raw);
+    }
+
+    // -1 — характеристика не выбрана.
+    private static StatType? ReadOptionalStatType(Cursor cursor, string what)
+    {
+        var raw = cursor.Next();
+        return raw == -1 ? null : ToEnum<StatType>(raw, what);
+    }
+
+    private sealed class BuildCodeFormatException : Exception
+    {
+        public BuildCodeFormatException(string message) : base(message)
+        {
+        }
     }
 
     private sealed class Cursor
@@ -377,8 +545,17 @@ public static class BuildCode
         public int Next()
         {
             if (_index >= _values.Length)
-                throw new IndexOutOfRangeException("Build code is too short.");
+                throw new BuildCodeFormatException("Код билда слишком короткий — ссылка обрезана или повреждена.");
             return _values[_index++];
+        }
+
+        // Читает количество элементов и проверяет, что оно разумное.
+        public int NextCount(int max, string what)
+        {
+            var count = Next();
+            if (count < 0 || count > max)
+                throw new BuildCodeFormatException($"Недопустимое значение {count} для «{what}».");
+            return count;
         }
     }
 }

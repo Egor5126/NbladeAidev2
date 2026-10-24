@@ -37,7 +37,7 @@ public static class WeaponNamesProvider
             WeaponType.Staff => statCombinationType switch
             {
                 StatCombinationType.ThreeStats => "Улучшенный боевой посох",
-                StatCombinationType.FourStats => "Нетленный посох",
+                StatCombinationType.FourStats => "Улучшенный боевой посох",
                 _ => throw new ArgumentOutOfRangeException(nameof(statCombinationType), statCombinationType, null)
             },
             WeaponType.Bow => statCombinationType switch

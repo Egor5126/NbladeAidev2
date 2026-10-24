@@ -1,0 +1,51 @@
+@using Models.Stats
+
+<div class="nb-tooltip">
+    <div class="nb-tooltip-name" style="color:@AccentColor">@Name</div>
+
+    @foreach (var line in Lines)
+    {
+        <div>@line</div>
+    }
+
+    @foreach (var stat in WhiteStats)
+    {
+        <div>@UiText.StatName(stat.StatType): +@stat.StatNumber</div>
+    }
+
+    @if (Combination == null || Combination.Stats.Length == 0)
+    {
+        <div class="nb-empty">Характеристики не выбраны</div>
+    }
+    else
+    {
+        @for (var i = 0; i < Combination.Stats.Length; i++)
+        {
+            <div class="nb-tooltip-stat">@UiText.StatTooltipText(Combination, i)</div>
+        }
+    }
+
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public string AccentColor { get; set; } = UiText.Violet;
+
+    // Строки без значений — тип предмета и т.п.
+    [Parameter]
+    public IEnumerable<string> Lines { get; set; } = Array.Empty<string>();
+
+    // Белые (базовые) характеристики, которые считаются сами и не редактируются.
+    [Parameter]
+    public IEnumerable<Stat> WhiteStats { get; set; } = Array.Empty<Stat>();
+
+    [Parameter]
+    public StatCombination? Combination { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

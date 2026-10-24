@@ -4,7 +4,8 @@
 
 <MudDialog>
     <TitleContent>
-        Изменение характеристик
+        <div class="nb-eyebrow">@Jewelry.SimpleName</div>
+        <div class="nb-dialog-name" style="color:@UiText.RarityColor(Jewelry.StuffRarity)">@Jewelry.Name</div>
     </TitleContent>
     <DialogContent>
         <JewelryComponent @bind-Jewelry="Jewelry" TJewelry="TJewelry"/>

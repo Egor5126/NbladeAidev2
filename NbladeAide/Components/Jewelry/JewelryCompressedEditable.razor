@@ -4,13 +4,11 @@
 
 @typeparam TJewelry where TJewelry : JewelryBase
 
-<JewelryCompressedInfo Jewelry="Jewelry" />
-
-<br />
-
-<MudButton @onclick="@OpenDialogAsync" Variant="Variant.Outlined" Color="Color.Primary">
-    Редактировать
-</MudButton>
+<ItemCard Slot="@Jewelry.SimpleName"
+          Name="@Jewelry.Name"
+          AccentColor="@UiText.RarityColor(Jewelry.StuffRarity)"
+          Combination="Jewelry.StatCombination"
+          OnClick="OpenDialogAsync" />
 
 @code {
     [Parameter]
@@ -21,10 +19,10 @@
 
     private async Task OpenDialogAsync()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true};
         var parameters = new DialogParameters<JewelryEditDialog<TJewelry>> { { x => x.Jewelry, Jewelry } };
 
-        var dialog = await DialogService.ShowAsync<JewelryEditDialog<TJewelry>>("Simple Dialog", parameters, options);
+        var dialog = await DialogService.ShowAsync<JewelryEditDialog<TJewelry>>(string.Empty, parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)

@@ -1,0 +1,59 @@
+@using Models.Stats
+
+<div class="nb-card" style="border-top-color:@AccentColor" role="button" tabindex="0"
+     @onclick="OnClick" @onkeydown="HandleKeyDown">
+    <div class="nb-card-head">
+        <span class="nb-eyebrow">@Slot</span>
+        @if (!string.IsNullOrEmpty(RuneText))
+        {
+            <span class="nb-badge">@RuneText</span>
+        }
+    </div>
+    <div class="nb-card-name" style="color:@AccentColor">@Name</div>
+
+    @if (Combination == null || Combination.Stats.Length == 0)
+    {
+        <div class="nb-empty">Характеристики не выбраны — нажмите, чтобы настроить</div>
+    }
+    else
+    {
+        @foreach (var stat in Combination.Stats)
+        {
+            <div class="nb-row">
+                <span>@UiText.StatName(stat.StatType)</span>
+                <span class="nb-row-value">+@UiText.FormatNumber(stat.StatNumber)</span>
+            </div>
+        }
+    }
+
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public string Slot { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public string AccentColor { get; set; } = UiText.Violet;
+
+    [Parameter]
+    public string? RuneText { get; set; }
+
+    [Parameter]
+    public StatCombination? Combination { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+            await OnClick.InvokeAsync();
+    }
+}

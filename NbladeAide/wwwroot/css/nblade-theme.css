@@ -1,0 +1,490 @@
+/* ===== Тёмная тема «Северный клинок» ===== */
+
+:root {
+    --nb-bg: #0E141B;
+    --nb-surface: #151D27;
+    --nb-surface-2: #1C2733;
+    --nb-border: #2A3847;
+    --nb-divider: #1F2B38;
+    --nb-text: #E6EDF3;
+    --nb-text-soft: #C3CED9;
+    --nb-muted: #9AA9B8;
+    --nb-ice: #5CC8F0;
+    --nb-green: #7FD98B;
+    --nb-gold: #E3B04B;
+    --nb-violet: #B58CFF;
+    --nb-orange: #FF9B3D;
+}
+
+html, body, .mud-typography, .mud-input, .mud-button-root {
+    font-family: 'Inter', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.nb-brand {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: 0.12em;
+}
+
+.nb-page {
+    max-width: 1376px;
+    margin: 0 auto;
+    padding: 24px 32px 48px;
+}
+
+.nb-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    margin-bottom: 24px;
+}
+
+.nb-toolbar-spacer {
+    flex-grow: 1;
+}
+
+.nb-chip {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--nb-border);
+    background: transparent;
+    color: var(--nb-text-soft);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.nb-chip:hover {
+    border-color: var(--nb-ice);
+}
+
+.nb-chip--active {
+    background: var(--nb-ice);
+    border-color: var(--nb-ice);
+    color: #06222E;
+}
+
+.nb-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.nb-main {
+    flex: 999 1 640px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.nb-aside {
+    flex: 1 1 340px;
+    max-width: 440px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 76px;
+}
+
+.nb-section-title {
+    margin: 0 0 12px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nb-muted);
+}
+
+.nb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.nb-grid--wide {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.nb-card {
+    display: block;
+    text-align: left;
+    background: var(--nb-surface);
+    border: 1px solid var(--nb-border);
+    border-top: 3px solid var(--nb-violet);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--nb-text);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.nb-card:hover,
+.nb-card:focus-visible {
+    background: #19232F;
+    border-color: var(--nb-ice);
+    border-top-color: inherit;
+    outline: none;
+}
+
+.nb-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.nb-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nb-muted);
+}
+
+.nb-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--nb-surface-2);
+    color: var(--nb-gold);
+}
+
+.nb-card-name {
+    font-weight: 600;
+    font-size: 15px;
+    margin: 6px 0 10px;
+}
+
+.nb-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    border-top: 1px solid var(--nb-divider);
+    font-size: 13px;
+    color: var(--nb-text-soft);
+}
+
+.nb-row-value {
+    font-weight: 600;
+    color: var(--nb-green);
+    font-variant-numeric: tabular-nums;
+}
+
+.nb-empty {
+    color: var(--nb-muted);
+    font-size: 13px;
+    font-style: italic;
+}
+
+.nb-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.nb-tag {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--nb-surface-2);
+    color: var(--nb-muted);
+}
+
+.nb-panel {
+    background: var(--nb-surface);
+    border: 1px solid var(--nb-border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.nb-panel-title {
+    margin: 0;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.nb-panel-sub {
+    color: var(--nb-muted);
+    font-size: 13px;
+}
+
+.nb-group-title {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--nb-ice);
+    margin: 16px 0 6px;
+}
+
+.nb-total-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-top: 1px solid var(--nb-divider);
+    color: var(--nb-text-soft);
+}
+
+.nb-total-value {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--nb-text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ===== Диалог редактирования вещи ===== */
+
+.nb-dialog-name {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 0.04em;
+}
+
+.nb-edit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+.nb-edit-main {
+    flex: 1 1 400px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nb-edit-side {
+    flex: 0 1 340px;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.nb-edit-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.nb-edit-title {
+    margin: 0;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nb-muted);
+}
+
+.nb-hint {
+    font-size: 12px;
+    color: var(--nb-green);
+}
+
+.nb-hint-muted {
+    font-size: 12px;
+    color: var(--nb-muted);
+}
+
+.nb-slot {
+    background: var(--nb-surface);
+    border: 1px solid var(--nb-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nb-slot-top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.nb-slot-type {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.nb-slot-value {
+    flex: 0 0 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    cursor: text;
+}
+
+.nb-slot-value--off {
+    opacity: 0.45;
+}
+
+.nb-slot-caption {
+    font-size: 12px;
+    color: var(--nb-muted);
+}
+
+.nb-slot-valuebox {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    color: var(--nb-green);
+    font-weight: 600;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+}
+
+.nb-slot-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Числовые поля: выглядят как обычный текст, при наведении/фокусе проявляется рамка. */
+.nb-num {
+    box-sizing: border-box;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: inherit;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.nb-num::-webkit-outer-spin-button,
+.nb-num::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.nb-num:hover:not(:disabled) {
+    border-color: var(--nb-border);
+}
+
+.nb-num:focus {
+    outline: none;
+    border-color: var(--nb-ice);
+    background: var(--nb-bg);
+}
+
+.nb-num:disabled {
+    cursor: default;
+}
+
+.nb-num--value {
+    width: 86px;
+    padding: 0 4px;
+    text-align: right;
+    color: var(--nb-green);
+    font-weight: 600;
+    font-size: 22px;
+}
+
+.nb-num--bound {
+    flex: 0 0 64px;
+    width: 64px;
+    padding: 6px 4px;
+    text-align: right;
+    font-size: 12px;
+    color: var(--nb-muted);
+}
+
+.nb-num--bound-max {
+    text-align: left;
+}
+
+.nb-range {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 44px;
+    accent-color: var(--nb-ice);
+}
+
+/* Камни в боковой колонке */
+.nb-gem {
+    background: var(--nb-surface);
+    border: 1px solid var(--nb-border);
+    border-radius: 10px;
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nb-gem-title {
+    margin: 0;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nb-muted);
+}
+
+.nb-tooltip {
+    background: #0A0F15;
+    border: 1px solid #3A4756;
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.nb-tooltip-name {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.nb-tooltip-stat {
+    color: var(--nb-green);
+    font-variant-numeric: tabular-nums;
+}
+
+.nb-seg-group {
+    display: flex;
+    gap: 8px;
+}
+
+.nb-seg {
+    flex: 1 1 0;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--nb-border);
+    background: var(--nb-surface);
+    color: var(--nb-text-soft);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.nb-seg--active {
+    border-color: currentColor;
+    font-weight: 600;
+}

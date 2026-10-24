@@ -11,7 +11,7 @@ public class BattleElixir10 : Elixir
             {
                 (StatType.AttackPower, 1.1),
                 (StatType.Accuracy, 1.1),
-                (StatType.CriticalDamage, 1.1),
+                (StatType.CriticalChance, 1.1),
                 (StatType.AttackSpeed, 1.1),
             })
     {

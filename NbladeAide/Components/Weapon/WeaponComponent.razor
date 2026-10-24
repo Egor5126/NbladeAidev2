@@ -3,39 +3,54 @@
 @using Models.Multipliers
 @using Models.Names
 @using Models.BaseModels.Weapon
-@using Models.Providers
 
-<WeaponCompressedInfo Weapon="Weapon" />
+<div class="nb-edit">
+    <div class="nb-edit-main">
+        <div class="nb-edit-head">
+            <h3 class="nb-edit-title">Характеристики</h3>
+            <span class="nb-hint">Диапазон подставляется по типу вещи и руне</span>
+        </div>
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
+        <ManualStatCombinationEditor StatCombination="Weapon.StatCombination"
+                                     StatCombinationChanged="UpdateStatCombination"
+                                     ScaleMultiplier="@StatScale" />
+    </div>
 
-@* Выбор готовой комбинации из списка временно скрыт — характеристики теперь выбираются вручную ниже *@
+    <div class="nb-edit-side">
+        <h3 class="nb-edit-title">Как будет выглядеть в игре</h3>
 
-<ManualStatCombinationEditor StatCombination="Weapon.StatCombination"
-                             StatCombinationChanged="UpdateStatCombination"
-                             ScaleMultiplier="@StatScale" />
+        <ItemTooltip Name="@Weapon.Name"
+                     AccentColor="@UiText.Violet"
+                     Lines="@(new[] { "Оружие", WeaponNamesProvider.GetWeaponNameByType(Weapon.WeaponType) })"
+                     WhiteStats="@WhiteStats"
+                     Combination="Weapon.StatCombination" />
 
-<MudSelect
-    T="StuffRuneOfImprovementLevel"
-    Label="Выберите уровень руны улучшения"
-    Value="@Weapon.RuneOfImprovementLevel"
-    ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
-    ValueChanged="UpdateRuneLevel">
+        <MudSelect
+            T="StuffRuneOfImprovementLevel"
+            Label="Выберите уровень руны улучшения"
+            Value="@Weapon.RuneOfImprovementLevel"
+            ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
+            ValueChanged="UpdateRuneLevel"
+            Variant="Variant.Outlined"
+            Margin="Margin.Dense">
 
-    @foreach (var classType in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
-    {
-        <MudSelectItem Value="@classType"/>
-    }
-</MudSelect>
+            @foreach (var classType in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
+            {
+                <MudSelectItem Value="@classType"/>
+            }
+        </MudSelect>
+        <div class="nb-hint-muted">Смените руну — диапазоны для новых характеристик пересчитаются, значения уже выбранных останутся как есть.</div>
 
-@for (var i = 0; i < Weapon.WeaponGems.Count; ++i)
-{
-    // ReSharper disable once InlineTemporaryVariable - избежание замыкания
-    var currentIndex = i;
-    <br />
-    <WeaponGemComponent @bind-WeaponGem="Weapon.WeaponGems[currentIndex]" WeaponGemNumber="currentIndex + 1" />
-}
+        @* Камни потенциала в игре сейчас отсутствуют — временно скрыты.
+        @for (var i = 0; i < Weapon.WeaponGems.Count; ++i)
+        {
+            // ReSharper disable once InlineTemporaryVariable - избежание замыкания
+            var currentIndex = i;
+            <WeaponGemComponent @bind-WeaponGem="Weapon.WeaponGems[currentIndex]" WeaponGemNumber="currentIndex + 1" />
+        }
+        *@
+    </div>
+</div>
 
 @code {
     [Parameter]
@@ -48,6 +63,9 @@
     private double StatScale =>
         BaseStuffStatsMultiplier.GetWeaponGreenStatMultiplier(Weapon.WeaponHandedClass)
         * StuffRuneOfImprovementMultiplier.RuneMultiplier(Weapon.RuneOfImprovementLevel);
+
+    private IEnumerable<Stat> WhiteStats =>
+        Weapon.BaseStat != null ? new[] { Weapon.BaseStat } : Array.Empty<Stat>();
 
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {

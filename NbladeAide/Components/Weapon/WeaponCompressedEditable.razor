@@ -1,14 +1,33 @@
+@using Models.BaseModels
 @using Models.BaseModels.Weapon
+@using Models.Names
 
 @inject IDialogService DialogService
 
-<WeaponCompressedInfo Weapon="Weapon" />
-
-<br />
-
-<MudButton @onclick="@OpenDialogAsync" Variant="Variant.Outlined" Color="Color.Primary">
-    Редактировать
-</MudButton>
+<ItemCard Slot="@Weapon.SimpleName"
+          Name="@Weapon.Name"
+          AccentColor="@UiText.Violet"
+          Combination="Weapon.StatCombination"
+          OnClick="OpenDialogAsync">
+    @if (Weapon.BaseStat != null)
+    {
+        <div class="nb-row">
+            <span>@UiText.StatName(Weapon.BaseStat.StatType)</span>
+            <span class="nb-row-value">+@UiText.FormatNumber(Weapon.BaseStat.StatNumber)</span>
+        </div>
+    }
+    @* Камни потенциала в игре сейчас отсутствуют — временно скрыты.
+    @if (ActiveGems.Any())
+    {
+        <div class="nb-tags">
+            @foreach (var gem in ActiveGems)
+            {
+                <span class="nb-tag">Камень: @UiText.StatName(gem.StatType)</span>
+            }
+        </div>
+    }
+    *@
+</ItemCard>
 
 @code {
     [Parameter]
@@ -17,12 +36,14 @@
     [Parameter]
     public EventCallback<WeaponBase> WeaponChanged { get; set; }
 
+    private IEnumerable<WeaponGem> ActiveGems => Weapon.WeaponGems.Where(gem => gem.GemLevel != GemLevel.None);
+
     private async Task OpenDialogAsync()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true};
         var parameters = new DialogParameters<WeaponEditDialog> { { x => x.Weapon, Weapon } };
 
-        var dialog = await DialogService.ShowAsync<WeaponEditDialog>("Simple Dialog", parameters, options);
+        var dialog = await DialogService.ShowAsync<WeaponEditDialog>(string.Empty, parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)

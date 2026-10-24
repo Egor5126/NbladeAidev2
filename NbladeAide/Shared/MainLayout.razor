@@ -1,15 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" IsDarkMode="true" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar>
+    <MudAppBar Elevation="0">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.subtitle1">NBladeAide</MudText>
+        <MudText Class="nb-brand">NBLADEAIDE</MudText>
     </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
+    <MudDrawer @bind-Open="@_drawerOpen" Elevation="0">
         <NavMenu/>
     </MudDrawer>
     <MudMainContent>
@@ -19,6 +19,31 @@
 
 @code {
     bool _drawerOpen = true;
+
+    // Тёмная палитра «Северного клинка»: ледяной голубой акцент на глубоком синем фоне.
+    private readonly MudTheme _theme = new()
+    {
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#5CC8F0",
+            Background = "#0E141B",
+            BackgroundGrey = "#121A23",
+            Surface = "#151D27",
+            AppbarBackground = "#121A23",
+            AppbarText = "#E6EDF3",
+            DrawerBackground = "#121A23",
+            DrawerText = "#C3CED9",
+            DrawerIcon = "#9AA9B8",
+            TextPrimary = "#E6EDF3",
+            TextSecondary = "#9AA9B8",
+            ActionDefault = "#9AA9B8",
+            Divider = "#2A3847",
+            DividerLight = "#1F2B38",
+            LinesDefault = "#2A3847",
+            LinesInputs = "#4A5B6D",
+            TableLines = "#2A3847"
+        }
+    };
 
     void DrawerToggle()
     {

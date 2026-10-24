@@ -11,6 +11,7 @@ public static class StatNamesProvider
             StatType.AttackPower => "сила атаки",
             StatType.AttackSpeed => "скорость атаки",
             StatType.Accuracy => "точность",
+            StatType.CriticalChance => "шанс крит. урона",
             StatType.CriticalDamage => "критический урон",
             StatType.Armor => "броня",
             StatType.MagicArmor => "магическая броня",

@@ -11,7 +11,7 @@ public class BattleElixir15 : Elixir
             {
                 (StatType.AttackPower, 1.15),
                 (StatType.Accuracy, 1.15),
-                (StatType.CriticalDamage, 1.15),
+                (StatType.CriticalChance, 1.15),
                 (StatType.AttackSpeed, 1.15),
             })
     {

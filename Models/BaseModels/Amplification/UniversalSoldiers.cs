@@ -11,6 +11,7 @@ public class UniversalSoldiers : Amplification
             (StatType.AttackPower, 1.03),
             (StatType.AttackSpeed, 1.03),
             (StatType.Accuracy, 1.03),
+            (StatType.CriticalChance, 1.03),
             (StatType.CriticalDamage, 1.03),
             (StatType.Armor, 1.03),
             (StatType.MagicArmor, 1.03),

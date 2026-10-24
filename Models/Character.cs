@@ -200,19 +200,24 @@ public class Character
 
     private Dictionary<StatType, double> GetWeaponGemsMultipliers()
     {
-        var multipliers = new Dictionary<StatType, double>();
-        var weaponGems = MainWeapon.WeaponGems;
-        if (SecondWeapon != null)
-            weaponGems = weaponGems.Concat(SecondWeapon.WeaponGems).ToList();
-        foreach (var weaponGem in weaponGems.Where(weaponGem => weaponGem.GemLevel != GemLevel.None))
-        {
-            if (!multipliers.TryGetValue(weaponGem.StatType, out _))
-                multipliers[weaponGem.StatType] = StatNumberProvider.GetWeaponGemMultiplier(weaponGem.GemLevel);
-            else
-                multipliers[weaponGem.StatType] += StatNumberProvider.GetWeaponGemMultiplier(weaponGem.GemLevel);
-        }
-        
-        return multipliers;
+        // Камни потенциала в игре сейчас отсутствуют — временно отключены (в том числе для билдов по ссылке).
+        // Чтобы вернуть: раскомментировать блок ниже, убрать пустой return и раскомментировать UI
+        // в WeaponComponent.razor и WeaponCompressedEditable.razor.
+        return new Dictionary<StatType, double>();
+
+        // var multipliers = new Dictionary<StatType, double>();
+        // var weaponGems = MainWeapon.WeaponGems;
+        // if (SecondWeapon != null)
+        //     weaponGems = weaponGems.Concat(SecondWeapon.WeaponGems).ToList();
+        // foreach (var weaponGem in weaponGems.Where(weaponGem => weaponGem.GemLevel != GemLevel.None))
+        // {
+        //     if (!multipliers.TryGetValue(weaponGem.StatType, out _))
+        //         multipliers[weaponGem.StatType] = StatNumberProvider.GetWeaponGemMultiplier(weaponGem.GemLevel);
+        //     else
+        //         multipliers[weaponGem.StatType] += StatNumberProvider.GetWeaponGemMultiplier(weaponGem.GemLevel);
+        // }
+        //
+        // return multipliers;
     }
 
     private Dictionary<StatType, double> GetConcentrationGemsMultipliers()
