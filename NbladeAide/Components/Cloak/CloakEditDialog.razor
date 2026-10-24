@@ -2,7 +2,8 @@
 
 <MudDialog>
     <TitleContent>
-        Изменение характеристик
+        <div class="nb-eyebrow">@Cloak.SimpleName</div>
+        <div class="nb-dialog-name" style="color:@UiText.RarityColor(Cloak.StuffRarity)">@Cloak.Name</div>
     </TitleContent>
     <DialogContent>
         <CloakComponent @bind-Cloak="Cloak"/>

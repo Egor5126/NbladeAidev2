@@ -1,57 +1,66 @@
 @using Models.Stats
 @using Models.BaseModels
+@using Models.Multipliers
 @using Models.Names
 @using Models.BaseModels.Cloak
-@using Models.Providers
 
-<CloakCompressedInfo Cloak="Cloak" />
+<div class="nb-edit">
+    <div class="nb-edit-main">
+        <div class="nb-edit-head">
+            <h3 class="nb-edit-title">Характеристики</h3>
+            <span class="nb-hint">Диапазон подставляется по редкости и руне</span>
+        </div>
 
-<br />
-<MudText Typo="Typo.h6" Style="@($"font-size: medium;")">Характеристики</MudText>
+        <ManualStatCombinationEditor StatCombination="Cloak.StatCombination"
+                                     StatCombinationChanged="UpdateStatCombination"
+                                     ScaleMultiplier="@StatScale" />
+    </div>
 
-<MudForm>
-    <MudRadioGroup T="StatCombinationType" SelectedOption="@Cloak.StatCombination.StatCombinationType" SelectedOptionChanged="ChangeStatCombinationType">
-        <MudRadio Value="@StatCombinationType.ThreeStats" Color="Color.Primary">3 хар-ки</MudRadio>
-        <MudRadio Value="@StatCombinationType.FourStats" Color="Color.Secondary">4 хар-ки</MudRadio>
-    </MudRadioGroup>
-</MudForm>
+    <div class="nb-edit-side">
+        <h3 class="nb-edit-title">Как будет выглядеть в игре</h3>
 
-<MudAutocomplete
-    T="StatCombination"
-    Label="Выберите характеристики предмета"
-    Value="@Cloak.StatCombination"
-    SearchFunc="@SearchPotentialStatCombinations"
-    ValueChanged="UpdateStatCombination"
-    MaxItems="null"
-    Clearable="true" />
+        <ItemTooltip Name="@Cloak.Name"
+                     AccentColor="@UiText.RarityColor(Cloak.StuffRarity)"
+                     Lines="@(new[] { Cloak.SimpleName })"
+                     WhiteStats="@WhiteStats"
+                     Combination="Cloak.StatCombination" />
 
-<MudSelect
-    T="StuffRuneOfImprovementLevel"
-    Label="Выберите уровень руны улучшения"
-    Value="@Cloak.RuneOfImprovementLevel"
-    ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
-    ValueChanged="UpdateRuneLevel">
+        <div>
+            <div class="nb-hint-muted" style="margin-bottom:6px">Редкость</div>
+            <div class="nb-seg-group" role="radiogroup" aria-label="Редкость плаща">
+                @foreach (var stuffRarity in Enum.GetValues(typeof(StuffRarity)).Cast<StuffRarity>())
+                {
+                    var currentRarity = stuffRarity;
+                    var isActive = currentRarity == Cloak.StuffRarity;
+                    <button type="button"
+                            role="radio"
+                            aria-checked="@(isActive ? "true" : "false")"
+                            class="nb-seg @(isActive ? "nb-seg--active" : "")"
+                            style="color:@UiText.RarityColor(currentRarity)"
+                            @onclick="@(() => UpdateStuffRarity(currentRarity))">
+                        @CommonNamesProvider.GetStuffRarityName(currentRarity)
+                    </button>
+                }
+            </div>
+        </div>
 
-    @foreach (var classType in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
-    {
-        <MudSelectItem Value="@classType"/>
-    }
-</MudSelect>
+        <MudSelect
+            T="StuffRuneOfImprovementLevel"
+            Label="Выберите уровень руны улучшения"
+            Value="@Cloak.RuneOfImprovementLevel"
+            ToStringFunc="@RuneNamesProvider.GetStuffRuneName"
+            ValueChanged="UpdateRuneLevel"
+            Variant="Variant.Outlined"
+            Margin="Margin.Dense">
 
-<MudSelect
-    T="StuffRarity"
-    Label="Выберите редкость плаща"
-    Value="@Cloak.StuffRarity"
-    ToStringFunc="@CommonNamesProvider.GetStuffRarityName"
-    ValueChanged="UpdateStuffRarity">
-
-    @foreach (var classType in Enum.GetValues(typeof(StuffRarity)).Cast<StuffRarity>())
-    {
-        <MudSelectItem Value="@classType"/>
-    }
-</MudSelect>
-
-<StatCombinationValuesEditor StatCombination="Cloak.StatCombination" OnChanged="@(() => CloakChanged.InvokeAsync(Cloak))" />
+            @foreach (var runeLevel in Enum.GetValues(typeof(StuffRuneOfImprovementLevel)).Cast<StuffRuneOfImprovementLevel>())
+            {
+                <MudSelectItem Value="@runeLevel"/>
+            }
+        </MudSelect>
+        <div class="nb-hint-muted">Броня и магическая броня считаются сами по редкости и руне. Смените редкость или руну — диапазоны и значения выбранных характеристик пересчитаются.</div>
+    </div>
+</div>
 
 @code {
     [Parameter]
@@ -60,12 +69,16 @@
     [Parameter]
     public EventCallback<Cloak> CloakChanged { get; set; }
 
-    private Task<IEnumerable<StatCombination>> SearchPotentialStatCombinations(string value)
-    {
-        var states = Cloak.PotentialStatCombinations;
+    // Общий множитель плаща: зелёный × редкость × руна улучшения — как в Cloak.
+    private double StatScale => ScaleOf(Cloak);
 
-        return Task.FromResult(FilterService.FilterStatCombinations(states, value));
-    }
+    private static double ScaleOf(Cloak cloak) =>
+        BaseStuffStatsMultiplier.GetCloakGreenStatMultiplier()
+        * BaseStuffStatsMultiplier.GetStuffRarityMultiplier(cloak.StuffRarity)
+        * StuffRuneOfImprovementMultiplier.RuneMultiplier(cloak.RuneOfImprovementLevel);
+
+    private IEnumerable<Stat> WhiteStats =>
+        new[] { Cloak.BaseArmorStat, Cloak.BaseMagicArmorStat }.Where(stat => stat.StatNumber > 0);
 
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {
@@ -73,21 +86,26 @@
         await CloakChanged.InvokeAsync(Cloak);
     }
 
-    private async Task UpdateRuneLevel(StuffRuneOfImprovementLevel runeLevel)
+    private Task UpdateRuneLevel(StuffRuneOfImprovementLevel runeLevel)
     {
-        Cloak = Cloak.CreateFromInstance(newRuneLevel: runeLevel);
-        await CloakChanged.InvokeAsync(Cloak);
+        return ChangeMultiplierAsync(newRuneLevel: runeLevel);
     }
 
-    private async Task ChangeStatCombinationType(StatCombinationType statCombinationType)
+    private Task UpdateStuffRarity(StuffRarity stuffRarity)
     {
-        Cloak = Cloak.CreateFromInstance(EmptyStatCombination.For(statCombinationType));
-        await CloakChanged.InvokeAsync(Cloak);
+        return ChangeMultiplierAsync(newStuffRarity: stuffRarity);
     }
 
-    private async Task UpdateStuffRarity(StuffRarity stuffRarity)
+    // При смене редкости или руны уже выбранные характеристики пересчитываются под новый множитель.
+    private async Task ChangeMultiplierAsync(
+        StuffRuneOfImprovementLevel? newRuneLevel = null,
+        StuffRarity? newStuffRarity = null)
     {
-        Cloak = Cloak.CreateFromInstance(newStuffRarity: stuffRarity);
+        var oldScale = StatScale;
+        var changed = Cloak.CreateFromInstance(newRuneLevel: newRuneLevel, newStuffRarity: newStuffRarity);
+        var rescaled = StatRangeProvider.Rescale(changed.StatCombination, oldScale, ScaleOf(changed));
+
+        Cloak = ReferenceEquals(rescaled, changed.StatCombination) ? changed : changed.CreateFromInstance(rescaled);
         await CloakChanged.InvokeAsync(Cloak);
     }
 }

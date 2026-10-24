@@ -63,7 +63,7 @@
                 <MudSelectItem Value="@runeLevel"/>
             }
         </MudSelect>
-        <div class="nb-hint-muted">Броня и магическая броня считаются сами по редкости и руне. Смените редкость или руну — диапазоны для новых характеристик пересчитаются, значения уже выбранных останутся как есть.</div>
+        <div class="nb-hint-muted">Броня и магическая броня считаются сами по редкости и руне. Смените редкость или руну — диапазоны и значения выбранных характеристик пересчитаются.</div>
     </div>
 </div>
 
@@ -75,10 +75,12 @@
     public EventCallback<TJewelry> JewelryChanged { get; set; }
 
     // Общий множитель бижутерии: зелёный × редкость × руна улучшения — как в JewelryBase.
-    private double StatScale =>
+    private double StatScale => ScaleOf(Jewelry);
+
+    private static double ScaleOf(JewelryBase jewelry) =>
         BaseStuffStatsMultiplier.GetJewelryGreenStatMultiplier()
-        * BaseStuffStatsMultiplier.GetStuffRarityMultiplier(Jewelry.StuffRarity)
-        * JewelryRuneOfImprovementMultiplier.RuneMultiplier(Jewelry.JewelryRuneOfImprovementLevel);
+        * BaseStuffStatsMultiplier.GetStuffRarityMultiplier(jewelry.StuffRarity)
+        * JewelryRuneOfImprovementMultiplier.RuneMultiplier(jewelry.JewelryRuneOfImprovementLevel);
 
     private IEnumerable<Stat> WhiteStats =>
         new[] { Jewelry.BaseArmorStat, Jewelry.BaseMagicArmorStat }.Where(stat => stat.StatNumber > 0);
@@ -89,15 +91,28 @@
         await JewelryChanged.InvokeAsync(Jewelry);
     }
 
-    private async Task UpdateRuneLevel(JewelryRuneOfImprovementLevel runeLevel)
+    private Task UpdateRuneLevel(JewelryRuneOfImprovementLevel runeLevel)
     {
-        Jewelry = (TJewelry)Jewelry.CreateFromInstance(newRuneLevel: runeLevel);
-        await JewelryChanged.InvokeAsync(Jewelry);
+        return ChangeMultiplierAsync(newRuneLevel: runeLevel);
     }
 
-    private async Task UpdateStuffRarity(StuffRarity stuffRarity)
+    private Task UpdateStuffRarity(StuffRarity stuffRarity)
     {
-        Jewelry = (TJewelry)Jewelry.CreateFromInstance(newStuffRarity: stuffRarity);
+        return ChangeMultiplierAsync(newStuffRarity: stuffRarity);
+    }
+
+    // При смене редкости или руны уже выбранные характеристики пересчитываются под новый множитель.
+    private async Task ChangeMultiplierAsync(
+        JewelryRuneOfImprovementLevel? newRuneLevel = null,
+        StuffRarity? newStuffRarity = null)
+    {
+        var oldScale = StatScale;
+        var changed = (TJewelry)Jewelry.CreateFromInstance(newRuneLevel: newRuneLevel, newStuffRarity: newStuffRarity);
+        var rescaled = StatRangeProvider.Rescale(changed.StatCombination, oldScale, ScaleOf(changed));
+
+        Jewelry = ReferenceEquals(rescaled, changed.StatCombination)
+            ? changed
+            : (TJewelry)changed.CreateFromInstance(rescaled);
         await JewelryChanged.InvokeAsync(Jewelry);
     }
 }

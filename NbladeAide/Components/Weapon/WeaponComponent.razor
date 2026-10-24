@@ -39,7 +39,7 @@
                 <MudSelectItem Value="@classType"/>
             }
         </MudSelect>
-        <div class="nb-hint-muted">Смените руну — диапазоны для новых характеристик пересчитаются, значения уже выбранных останутся как есть.</div>
+        <div class="nb-hint-muted">Смените руну — диапазоны и значения выбранных характеристик пересчитаются.</div>
 
         @* Камни потенциала в игре сейчас отсутствуют — временно скрыты.
         @for (var i = 0; i < Weapon.WeaponGems.Count; ++i)
@@ -60,9 +60,11 @@
     public EventCallback<WeaponBase> WeaponChanged { get; set; }
 
     // Общий множитель оружия: одно-/двуручное × руна улучшения — как в WeaponBase.
-    private double StatScale =>
-        BaseStuffStatsMultiplier.GetWeaponGreenStatMultiplier(Weapon.WeaponHandedClass)
-        * StuffRuneOfImprovementMultiplier.RuneMultiplier(Weapon.RuneOfImprovementLevel);
+    private double StatScale => ScaleOf(Weapon);
+
+    private static double ScaleOf(WeaponBase weapon) =>
+        BaseStuffStatsMultiplier.GetWeaponGreenStatMultiplier(weapon.WeaponHandedClass)
+        * StuffRuneOfImprovementMultiplier.RuneMultiplier(weapon.RuneOfImprovementLevel);
 
     private IEnumerable<Stat> WhiteStats =>
         Weapon.BaseStat != null ? new[] { Weapon.BaseStat } : Array.Empty<Stat>();
@@ -73,9 +75,14 @@
         await WeaponChanged.InvokeAsync(Weapon);
     }
 
+    // При смене руны уже выбранные характеристики пересчитываются под новый множитель.
     private async Task UpdateRuneLevel(StuffRuneOfImprovementLevel runeLevel)
     {
-        Weapon = Weapon.CreateFromInstance(newRuneLevel: runeLevel);
+        var oldScale = StatScale;
+        var changed = Weapon.CreateFromInstance(newRuneLevel: runeLevel);
+        var rescaled = StatRangeProvider.Rescale(changed.StatCombination, oldScale, ScaleOf(changed));
+
+        Weapon = ReferenceEquals(rescaled, changed.StatCombination) ? changed : changed.CreateFromInstance(rescaled);
         await WeaponChanged.InvokeAsync(Weapon);
     }
 }

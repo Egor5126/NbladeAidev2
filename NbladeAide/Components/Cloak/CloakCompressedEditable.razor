@@ -17,7 +17,7 @@
 
     private async Task OpenDialogAsync()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true};
         var parameters = new DialogParameters<CloakEditDialog> { { x => x.Cloak, Cloak } };
 
         var dialog = await DialogService.ShowAsync<CloakEditDialog>(string.Empty, parameters, options);

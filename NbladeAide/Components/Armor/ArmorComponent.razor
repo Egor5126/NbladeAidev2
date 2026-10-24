@@ -40,7 +40,7 @@
                 <MudSelectItem Value="@classType"/>
             }
         </MudSelect>
-        <div class="nb-hint-muted">Смените руну — диапазоны для новых характеристик пересчитаются, значения уже выбранных останутся как есть.</div>
+        <div class="nb-hint-muted">Смените руну — диапазоны и значения выбранных характеристик пересчитаются.</div>
 
         <GemComponent @bind-Gem="Armor.Gem1"/>
         <ConcentrationGemComponent @bind-ConcentrationGem="Armor.Gem2"/>
@@ -55,9 +55,11 @@
     public EventCallback<TArmor> ArmorChanged { get; set; }
 
     // Общий множитель брони: множитель типа брони × руна улучшения — как в ArmorBase.
-    private double StatScale =>
-        BaseStuffStatsMultiplier.GetArmorGreenStatMultiplier(Armor.ArmorType)
-        * StuffRuneOfImprovementMultiplier.RuneMultiplier(Armor.RuneOfImprovementLevel);
+    private double StatScale => ScaleOf(Armor);
+
+    private static double ScaleOf(ArmorBase armor) =>
+        BaseStuffStatsMultiplier.GetArmorGreenStatMultiplier(armor.ArmorType)
+        * StuffRuneOfImprovementMultiplier.RuneMultiplier(armor.RuneOfImprovementLevel);
 
     private async Task UpdateStatCombination(StatCombination newStatCombination)
     {
@@ -65,9 +67,16 @@
         await ArmorChanged.InvokeAsync(Armor);
     }
 
+    // При смене руны уже выбранные характеристики пересчитываются под новый множитель.
     private async Task UpdateRuneLevel(StuffRuneOfImprovementLevel runeLevel)
     {
-        Armor = (TArmor)Armor.CreateFromInstance(newRuneLevel: runeLevel);
+        var oldScale = StatScale;
+        var changed = (TArmor)Armor.CreateFromInstance(newRuneLevel: runeLevel);
+        var rescaled = StatRangeProvider.Rescale(changed.StatCombination, oldScale, ScaleOf(changed));
+
+        Armor = ReferenceEquals(rescaled, changed.StatCombination)
+            ? changed
+            : (TArmor)changed.CreateFromInstance(rescaled);
         await ArmorChanged.InvokeAsync(Armor);
     }
 }
