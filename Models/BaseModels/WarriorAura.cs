@@ -31,8 +31,8 @@ public static class WarriorAuraProvider
         return aura switch
         {
             WarriorAura.None => string.Empty,
-            WarriorAura.Defense => "+11% брони и магической брони, +450 сопротивления крит. урону",
-            WarriorAura.Resistance => "+12% сопротивления крит. урону",
+            WarriorAura.Defense => "+11% брони и магической брони, +1350 к сопротивлению крит. урону",
+            WarriorAura.Resistance => "+12% и +450 к сопротивлению крит. урону",
             _ => throw new ArgumentOutOfRangeException(nameof(aura), aura, null)
         };
     }
@@ -54,7 +54,8 @@ public static class WarriorAuraProvider
     {
         return aura switch
         {
-            WarriorAura.Defense => new[] { (StatType.CriticalDamageResistance, 450) },
+            WarriorAura.Defense => new[] { (StatType.CriticalDamageResistance, 1350) },
+            WarriorAura.Resistance => new[] { (StatType.CriticalDamageResistance, 450) },
             _ => Array.Empty<(StatType, int)>()
         };
     }
