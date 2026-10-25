@@ -47,6 +47,14 @@ public class Character
 
     // Аура действует только у воина; у других классов значение игнорируется.
     public WarriorAura WarriorAura { get; set; } = WarriorAura.None;
+
+    // Аура точности действует только у лучника; у других классов значение игнорируется.
+    public ArcherAura ArcherAura { get; set; } = ArcherAura.None;
+
+    // Есть ли у персонажа действующая аура (для подписей в интерфейсе).
+    public bool HasActiveAura =>
+        (CharacterClass == CharacterClass.Warrior && WarriorAura != WarriorAura.None)
+        || (CharacterClass == CharacterClass.Archer && ArcherAura != ArcherAura.None);
     public Stat[] BaseClassStats { get; set; }
 
     public Cloak Cloak { get; set; }
@@ -129,22 +137,28 @@ public class Character
             result[multiplier.Key].Gems += bonus;
         }
 
-        ApplyWarriorAura(result);
+        ApplyAura(result);
 
         return result;
     }
 
-    // Аура воина считается последней: проценты — от итога со всеми вещами, камнями и эликсирами.
-    private void ApplyWarriorAura(Dictionary<StatType, StatBreakdown> result)
+    // Аура класса считается последней: проценты — от итога со всеми вещами, камнями и эликсирами.
+    private void ApplyAura(Dictionary<StatType, StatBreakdown> result)
     {
-        if (CharacterClass != CharacterClass.Warrior || WarriorAura == WarriorAura.None)
-            return;
+        if (CharacterClass == CharacterClass.Warrior && WarriorAura != WarriorAura.None)
+        {
+            foreach (var (statType, percent) in WarriorAuraProvider.GetPercentBonuses(WarriorAura))
+                result[statType].Aura += (int)Math.Floor(result[statType].Total * percent);
 
-        foreach (var (statType, percent) in WarriorAuraProvider.GetPercentBonuses(WarriorAura))
-            result[statType].Aura += (int)Math.Floor(result[statType].Total * percent);
+            foreach (var (statType, value) in WarriorAuraProvider.GetFlatBonuses(WarriorAura))
+                result[statType].Aura += value;
+        }
 
-        foreach (var (statType, value) in WarriorAuraProvider.GetFlatBonuses(WarriorAura))
-            result[statType].Aura += value;
+        if (CharacterClass == CharacterClass.Archer && ArcherAura != ArcherAura.None)
+        {
+            foreach (var (statType, percent) in ArcherAuraProvider.GetPercentBonuses(ArcherAura))
+                result[statType].Aura += (int)Math.Floor(result[statType].Total * percent);
+        }
     }
 
     private void AddMultipliedStat(

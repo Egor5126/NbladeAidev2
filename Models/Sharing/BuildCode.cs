@@ -17,7 +17,7 @@ namespace Models.Sharing;
 // Формат: «v2.<число>.<число>…». Первый токен — версия формата. Строки без версии (первые ссылки)
 // читаются как версия 1: там эликсиры и усиления хранились по порядку в списке, в версии 2 —
 // по постоянным номерам из таблиц ниже. В версии 3 в конец добавлена аура воина (0 — нет);
-// ссылки версий 1–2 читаются без ауры.
+// в версии 4 — аура лучника; ссылки версий 1–2 читаются без аур, версии 3 — без ауры лучника.
 //
 // Правила, чтобы чужие ссылки не ломались:
 //  - числа enum'ов, которые попадают в ссылку, не менять и не переставлять (новые — только в конец);
@@ -28,7 +28,7 @@ public static class BuildCode
 {
     private const char Separator = '.';
     private const char VersionMarker = 'v';
-    private const int CurrentVersion = 3;
+    private const int CurrentVersion = 4;
 
     // Защита от испорченных/подделанных ссылок: не даём заказать огромные массивы.
     private const int MaxStatsPerCombination = 8;
@@ -47,6 +47,8 @@ public static class BuildCode
         (13, typeof(HealthElixir15)),
         (14, typeof(DefenceElixir10)),
         (15, typeof(DefenceElixir15)),
+        (16, typeof(ImmunityElixir10)),
+        (17, typeof(ImmunityElixir15)),
     };
 
     // Постоянные номера усилений.
@@ -100,6 +102,7 @@ public static class BuildCode
         }
 
         parts.Add((int)character.WarriorAura);
+        parts.Add((int)character.ArcherAura);
 
         return $"{VersionMarker}{CurrentVersion}{Separator}{string.Join(Separator, parts)}";
     }
@@ -189,6 +192,9 @@ public static class BuildCode
 
             if (version >= 3)
                 result.WarriorAura = ReadEnum<WarriorAura>(cursor, "аура воина");
+
+            if (version >= 4)
+                result.ArcherAura = ReadEnum<ArcherAura>(cursor, "аура лучника");
 
             character = result;
             return true;

@@ -11,6 +11,8 @@ public class HealthElixir10 : Elixir
             {
                 (StatType.Health, 1.1),
                 (StatType.CriticalDamageResistance, 1.1),
+                (StatType.Armor, 1.1),
+                (StatType.MagicArmor, 1.1),
             })
     {
     }

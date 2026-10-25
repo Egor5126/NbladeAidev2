@@ -12,6 +12,8 @@ public class DefenceElixir10 : Elixir
                 (StatType.Block, 1.1),
                 (StatType.MagicalResistance, 1.1),
                 (StatType.CriticalDamageResistance, 1.1),
+                (StatType.Armor, 1.1),
+                (StatType.MagicArmor, 1.1),
             })
     {
     }

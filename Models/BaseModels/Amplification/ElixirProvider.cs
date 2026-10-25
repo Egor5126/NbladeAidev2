@@ -14,5 +14,7 @@ public static class ElixirProvider
         new HealthElixir15(),
         new DefenceElixir10(),
         new DefenceElixir15(),
+        new ImmunityElixir10(),
+        new ImmunityElixir15(),
     };
 }

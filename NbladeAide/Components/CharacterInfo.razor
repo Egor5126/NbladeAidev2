@@ -162,6 +162,24 @@
                     </MudSelect>
                 </div>
             }
+            @if (Character.CharacterClass == CharacterClass.Archer)
+            {
+                <div class="nb-field" style="margin-top:12px">
+                    <MudSelect
+                        T="ArcherAura"
+                        Label="Аура точности"
+                        @bind-Value="@Character.ArcherAura"
+                        ToStringFunc="@ArcherAuraProvider.GetName"
+                        Variant="Variant.Outlined"
+                        Margin="Margin.Dense">
+
+                        @foreach (var aura in Enum.GetValues<ArcherAura>())
+                        {
+                            <MudSelectItem Value="@aura"/>
+                        }
+                    </MudSelect>
+                </div>
+            }
             <div class="nb-amps">
                 @foreach (var availableAmplification in Character.AvailableAmplifications)
                 {
@@ -190,7 +208,7 @@
                 <span class="nb-legend-item"><span class="nb-swatch nb-seg-gear"></span>Вещи</span>
                 <span class="nb-legend-item"><span class="nb-swatch nb-seg-gems"></span>Камни</span>
                 <span class="nb-legend-item"><span class="nb-swatch nb-seg-boost"></span>Эликсиры и усиления</span>
-                @if (Character.CharacterClass == CharacterClass.Warrior && Character.WarriorAura != WarriorAura.None)
+                @if (Character.HasActiveAura)
                 {
                     <span class="nb-legend-item"><span class="nb-swatch nb-seg-aura"></span>Аура</span>
                 }
