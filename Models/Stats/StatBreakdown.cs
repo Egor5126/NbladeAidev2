@@ -16,5 +16,8 @@ public sealed class StatBreakdown
     // Эликсиры и усиления гильдии: на сколько они увеличили характеристики класса и вещей.
     public int Boost { get; set; }
 
-    public int Total => Base + Gear + Gems + Boost;
+    // Аура воина.
+    public int Aura { get; set; }
+
+    public int Total => Base + Gear + Gems + Boost + Aura;
 }

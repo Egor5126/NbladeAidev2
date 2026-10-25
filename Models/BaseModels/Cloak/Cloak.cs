@@ -8,7 +8,8 @@ public class Cloak
 {
     public Cloak() : this(
         // Конкретная комбинация характеристик изначально не выбрана — её должен выбрать игрок.
-        EmptyStatCombination.ThreeStats,
+        // Плащ всегда с 4 характеристиками, как и остальные вещи.
+        EmptyStatCombination.FourStats,
         StuffRarity.Orange,
         StuffRuneOfImprovementLevel.Level10) {}
 

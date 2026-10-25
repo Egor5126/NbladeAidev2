@@ -567,6 +567,7 @@ html, body, .mud-typography, .mud-input, .mud-button-root {
 .nb-seg-gear { background: var(--nb-ice); }
 .nb-seg-gems { background: var(--nb-gold); }
 .nb-seg-boost { background: var(--nb-green); }
+.nb-seg-aura { background: var(--nb-violet); }
 
 .nb-stat {
     padding: 8px 0;

@@ -16,7 +16,8 @@ namespace Models.Sharing;
 //
 // Формат: «v2.<число>.<число>…». Первый токен — версия формата. Строки без версии (первые ссылки)
 // читаются как версия 1: там эликсиры и усиления хранились по порядку в списке, в версии 2 —
-// по постоянным номерам из таблиц ниже.
+// по постоянным номерам из таблиц ниже. В версии 3 в конец добавлена аура воина (0 — нет);
+// ссылки версий 1–2 читаются без ауры.
 //
 // Правила, чтобы чужие ссылки не ломались:
 //  - числа enum'ов, которые попадают в ссылку, не менять и не переставлять (новые — только в конец);
@@ -27,7 +28,7 @@ public static class BuildCode
 {
     private const char Separator = '.';
     private const char VersionMarker = 'v';
-    private const int CurrentVersion = 2;
+    private const int CurrentVersion = 3;
 
     // Защита от испорченных/подделанных ссылок: не даём заказать огромные массивы.
     private const int MaxStatsPerCombination = 8;
@@ -97,6 +98,8 @@ public static class BuildCode
             parts.Add(GetId(amplification, AmplificationIds, "усиление"));
             parts.Add(amplification.Used ? 1 : 0);
         }
+
+        parts.Add((int)character.WarriorAura);
 
         return $"{VersionMarker}{CurrentVersion}{Separator}{string.Join(Separator, parts)}";
     }
@@ -184,6 +187,9 @@ public static class BuildCode
 
             DecodeAmplifications(cursor, version, result);
 
+            if (version >= 3)
+                result.WarriorAura = ReadEnum<WarriorAura>(cursor, "аура воина");
+
             character = result;
             return true;
         }
@@ -211,12 +217,33 @@ public static class BuildCode
 
     private static Cloak DecodeCloak(Cursor cursor, Cloak current)
     {
-        var combination = ReadCombination(cursor);
+        var combination = NormalizeCloakCombination(ReadCombination(cursor));
         var stuffRarity = ReadEnum<StuffRarity>(cursor, "редкость плаща");
         var runeLevel = ReadEnum<StuffRuneOfImprovementLevel>(cursor, "руна плаща");
         var result = current.CreateFromInstance(combination, runeLevel, stuffRarity);
         DecodeStatValues(cursor, result.StatCombination);
         return result;
+    }
+
+    // Плащ всегда с 4 характеристиками. Старые ссылки могли хранить его как трёхстатовый —
+    // приводим к 4 характеристикам, значения и диапазоны выбранных статов сохраняются.
+    private static StatCombination NormalizeCloakCombination(StatCombination combination)
+    {
+        if (combination.StatCombinationType != StatCombinationType.ThreeStats)
+            return combination;
+
+        if (combination is EmptyStatCombination)
+            return EmptyStatCombination.FourStats;
+
+        if (combination is CustomStatCombination custom)
+        {
+            var stats = new (StatType StatType, int Min, int Max, int Value)[custom.Stats.Length];
+            for (var i = 0; i < stats.Length; i++)
+                stats[i] = (custom.Stats[i].StatType, custom.GetMin(i), custom.GetMax(i), custom.Stats[i].StatNumber);
+            return new CustomStatCombination(StatCombinationType.FourStats, stats);
+        }
+
+        return combination;
     }
 
     private static void EncodeJewelry(JewelryBase jewelry, List<int> parts)

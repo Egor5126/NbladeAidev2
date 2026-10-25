@@ -143,6 +143,25 @@
                     </MudSelect>
                 </div>
             </div>
+            @if (Character.CharacterClass == CharacterClass.Warrior)
+            {
+                <div class="nb-field" style="margin-top:12px">
+                    <MudSelect
+                        T="WarriorAura"
+                        Label="Аура воина"
+                        @bind-Value="@Character.WarriorAura"
+                        ToStringFunc="@WarriorAuraProvider.GetName"
+                        Variant="Variant.Outlined"
+                        Margin="Margin.Dense"
+                        HelperText="@WarriorAuraProvider.GetDescription(Character.WarriorAura)">
+
+                        @foreach (var aura in Enum.GetValues<WarriorAura>())
+                        {
+                            <MudSelectItem Value="@aura"/>
+                        }
+                    </MudSelect>
+                </div>
+            }
             <div class="nb-amps">
                 @foreach (var availableAmplification in Character.AvailableAmplifications)
                 {
@@ -171,6 +190,10 @@
                 <span class="nb-legend-item"><span class="nb-swatch nb-seg-gear"></span>Вещи</span>
                 <span class="nb-legend-item"><span class="nb-swatch nb-seg-gems"></span>Камни</span>
                 <span class="nb-legend-item"><span class="nb-swatch nb-seg-boost"></span>Эликсиры и усиления</span>
+                @if (Character.CharacterClass == CharacterClass.Warrior && Character.WarriorAura != WarriorAura.None)
+                {
+                    <span class="nb-legend-item"><span class="nb-swatch nb-seg-aura"></span>Аура</span>
+                }
             </div>
 
             @foreach (var group in StatGroups)
@@ -187,11 +210,12 @@
                         @if (part.Total > 0)
                         {
                             <div class="nb-bar" role="img"
-                                 aria-label="@($"Класс {UiText.FormatNumber(part.Base)}, вещи {UiText.FormatNumber(part.Gear)}, камни {UiText.FormatNumber(part.Gems)}, эликсиры и усиления {UiText.FormatNumber(part.Boost)}")">
+                                 aria-label="@($"Класс {UiText.FormatNumber(part.Base)}, вещи {UiText.FormatNumber(part.Gear)}, камни {UiText.FormatNumber(part.Gems)}, эликсиры и усиления {UiText.FormatNumber(part.Boost)}, аура {UiText.FormatNumber(part.Aura)}")">
                                 <div class="nb-seg-base" style="width:@Share(part.Base, part.Total)" title="@($"Класс: {UiText.FormatNumber(part.Base)}")"></div>
                                 <div class="nb-seg-gear" style="width:@Share(part.Gear, part.Total)" title="@($"Вещи: {UiText.FormatNumber(part.Gear)}")"></div>
                                 <div class="nb-seg-gems" style="width:@Share(part.Gems, part.Total)" title="@($"Камни: {UiText.FormatNumber(part.Gems)}")"></div>
                                 <div class="nb-seg-boost" style="width:@Share(part.Boost, part.Total)" title="@($"Эликсиры и усиления: {UiText.FormatNumber(part.Boost)}")"></div>
+                                <div class="nb-seg-aura" style="width:@Share(part.Aura, part.Total)" title="@($"Аура: {UiText.FormatNumber(part.Aura)}")"></div>
                             </div>
                         }
                     </div>
